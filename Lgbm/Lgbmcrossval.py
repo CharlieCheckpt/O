@@ -1,30 +1,128 @@
 import numpy as np
 import pickle as pkl
+import os
 import time
 
 from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import ParameterGrid, StratifiedKFold
-
+from sklearn.model_selection import ParameterGrid, StratifiedKFold, train_test_split
 import lightgbm as lgb
 
 DATA_PATH='data'
 
 
 class Lgbm:
+    def __init__(self, X, y, config:str):
+        self.X = X
+        self.y = y
+        self.models = []
+        self.config = config
 
-    def __init__(self, Xtr, Ytr, Xval, Yval, base_params = {}, hist_file='lgbm.log'):
-        self.dtr  = lgb.Dataset(Xtr, label=Ytr)
-        self.dval = lgb.Dataset(Xval, label=Yval)
+    def train(self, Xtr, ytr, Xdev, ydev, params:dict):
+        """Trains booster.
+        Returns:
+            model
+            dict eval result
+        """
+        dtr = lgb.Dataset(Xval, label=yval)
+        ddev = lgb.Dataset(Xdev, label=ydev)
+        history_eval = {}
+        bst = lgb.train(params, train_set=dtr, num_boost_round=nrounds, 
+                        valid_sets=[ddev], early_stopping_rounds=100, evals_result=history_eval) # todo: see what contains history_eval
+        return bst, history_eval
 
-    def test_params(self, param, nrounds, early_stop, Xval, Yval):
 
-        booster = lgb.train(param, self.dtr, nrounds,
-                            valid_sets=[self.dval],
-                            early_stopping_rounds=early_stop)
+    def cross_validation(self, params:dict, nfolds:int):
+        """Stratified cross-validation.
+        """
+        dict_res = {}  # dictionary of results
+        dict_res["nepochs_early_stop"] = []  # number of epochs before early stop
+        dict_res["auc_train"] = []  # auc on train set
+        dict_res["auc_val"] = []  # auc on validation set
 
-        best_booster_auc = roc_auc_score(Yval, booster.predict(Xval,num_iteration=booster.best_iteration)) # CS
+        skf = StratifiedKFold(nfolds, random_state=777)
+        for train_index, val_index in skf.split(X, y):
+            Xtr, ytr = X[train_index], y[train_index]
+            # creation of dev set for early stopping
+            Xtr, Xdev, ytr, ydev = train_test_split(Xtr, ytr, test_size = 0.2, random_state=777)
+            Xval, yval = X[val_index], y[val_index]
 
-        return booster,best_booster_auc
+            booster, history_eval = self.train(Xtr, ytr, Xdev, ydev,params)
+            preds_tr, preds_dev, preds_val = booster.predict(Xtr), booster.predict(Xdev), booster.predict(Xval)
+            auc_tr, auc_dev, auc_val = roc_auc_score(ytr, preds_tr), roc_auc_score(ydev, preds_dev), roc_auc_score(yval, preds_val)
+            auc_tr, auc_dev, auc_val = round(auc_tr, 3), round(auc_dev, 3), round(auc_val, 3)
+            
+            dict_res["train"].append(auc_tr)
+            dict_res["val"].append(auc_val)
+            dict_res["dev"].append(auc_dev)
+            dict_res["nepochs_early_stop"].append(len(history_eval))
+
+            print(f"Auc on train : {auc_tr}, validation: {auc_val}")
+            print(f"Average Auc on train : {np.mean(dict_res["train"])}, validation : {np.mean(dict_res["val"])}")
+        
+            self.dict_res = dict_res
+            self.models.append(booster)
+
+    def print_results(self):
+        avg_auc_train, avg_auc_val = round(np.mean(self.dict_res["auc_train"]),3), round(np.mean(self.dict_res["auc_val"]),3)
+        print(f"*** Average Auc on train : {avg_auc_train}, val: {avg_auc_val}")
+        print(f"(", self.dict_res["auc_val"], ") ***")
+
+    def save_results(self):
+        # create name of directory where to save
+        directory = os.path.join("./experiments", self.config)
+        os.makedirs(directory)
+        with open(os.path.join(directory, 'results.csv'), 'wb') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in self.dict_res.items():
+                writer.writerow([key, value])
+        print(f"results saved in {directory}")
+    
+    def save_models(self):
+        for i, booster in enumerate(self.models):
+            filename = os.path.join("./experiments", self.config, "model" + str(i) + ".txt")
+            booster.save_model(filename)
+            print(f"model saved : {filename}")
+
+
+
+def load_data(type_data:str):
+    start = time.time()
+    if type_data == "18k":
+        print("loading half data ...")
+        X = np.load(os.path.join(DATA_PATH, 'Xtrain_challenge_owkin_half.npy'))
+    else:
+        print("loading full data ...")
+        X = np.load(os.path.join(DATA_PATH, 'Xtrain_challenge_owkin.csv')) # todo: create full matrix as .npy
+    y = np.load(os.path.join(DATA_PATH, 'Ytrain_challenge_owkin_half.npy'))
+    end = time.time()
+    print(f"data loaded in {round(end-start, 3)} seconds")
+    return X, y
+
+def main():
+    # parse config
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", default="default",
+                        type=str, help="config for running Unet.")
+    args = parser.parse_args()
+    config = args.config
+    print(f"\n ----> You chose config : {config} <---- \n")
+    # load config
+    configs = yaml.load(open("configs.yaml"))
+    opts = configs[config]
+    # load data
+    X, y = load_data(opts["type_data"])
+    # cross validation 
+    booster = Lgbm(X, y, config)
+    booster.cross_validation(opts["params"], 5)
+    booster.print_results()
+    booster.save_results()
+    booster.save_models()
+
+
+if __name__ == '__main__':
+    
+    main()
+
 
 # =============================================================================
 # Loading Data
