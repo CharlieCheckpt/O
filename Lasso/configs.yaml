@@ -1,0 +1,4 @@
+test:
+  type_data: "local"
+  l1_ratio: 0.5         # l1_ratio = [.1, .5, .7, .9, .95, .99, 1]
+  nfolds: 5

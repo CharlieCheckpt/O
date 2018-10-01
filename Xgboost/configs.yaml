@@ -1,0 +1,14 @@
+test:
+  type_data: "local"
+  nrounds: 100
+  nfolds: 5
+  params:
+    seed: 777
+    ntrees: 100
+    max_depth: 6  
+    objective: 'binary:logistic'
+    eval_metric: 'auc'
+    nthread: 3
+    subsample: 1
+    colsample_bytree: 1
+    min_child_weight: 1
