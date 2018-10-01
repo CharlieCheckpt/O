@@ -1,10 +1,29 @@
-import rcsv
+import sys
+import time
+import os
+
 import numpy as np
 import pandas as pd
 
 use_rcsv = False
+sys.path.insert(0, "../")
+from utils import DATA_PATH
 
-DATA_PATH='data'
+def load_data(fn_X:str, fn_y=None):
+    start = time.time()
+    # load X
+    X = pd.read_csv(fn_X)
+    X = X.iloc[:, 1:]
+    # load Y
+    if fn_y is not None:
+        y = pd.read_csv(fn_y)
+        y = y.iloc[:, 1]
+    end = time.time()   
+
+    load_time = round(end-start, 3)
+    print(f"data loaded in {load_time} seconds")
+    return X, y 
+
 
 def collapse_snip_pairs(X):
     N, M = X.shape
@@ -15,36 +34,43 @@ def collapse_snip_pairs(X):
 
     return half_X
 
-if use_rcsv:
-    Ytrain = rcsv.read(DATA_PATH + '/' + 'challenge_output_data_training_file_disease_prediction_from_dna_data.csv')
-    Ytrain = Ytrain[1:, 1]
-else:
-    Ytrain = pd.read_csv(DATA_PATH + '/' + 'challenge_output_data_training_file_disease_prediction_from_dna_data.csv')
-    Ytrain = Ytrain.iloc[:,1]
 
-np.save(DATA_PATH + '/' + 'Ytrain_challenge_owkin_half.npy', Ytrain)
-print(f"Ytr saved : {Ytrain.shape}")
+def save_data(X, y, filename_X: str, filename_y:str):
+    
+    np.save(filename_X, X)
+    print(f"data saved : {filename_X}")
+    if y is not None:
+        np.save(filename_y, y)
+        print(f"y saved : {filename_y}")
 
-if use_rcsv:
-    Xtrain = rcsv.read(DATA_PATH + '/' + 'Xtrain_challenge_owkin.csv')
-    Xtrain = Xtrain[1:, 1:]
-else:
-    Xtrain = pd.read_csv(DATA_PATH + '/' + 'Xtrain_challenge_owkin.csv')
-    Xtrain = Xtrain.iloc[:,1:]
 
-half_Xtrain = collapse_snip_pairs(Xtrain)
-print(f"saving half Xtr : {half_Xtrain.shape}")
-np.save(DATA_PATH + '/' + 'Xtrain_challenge_owkin_half.npy', half_Xtrain)
-print("half Xtr saved")
+def main():
+    # load data
+    filename_Xtr = os.path.join(DATA_PATH, 'Xtrain_challenge_owkin.csv')
+    filename_ytr = os.path.join(DATA_PATH, 'challenge_output_data_training_file_disease_prediction_from_dna_data.csv')
+    filename_Xte = os.path.join(DATA_PATH, 'Xtest_challenge_owkin.csv')
 
-if use_rcsv:
-    Xtest = rcsv.read(DATA_PATH + '/' + 'Xtest_challenge_owkin.csv')
-    Xtest = Xtest[1:, 1:]
-else:
-    Xtest = pd.read_csv(DATA_PATH + '/' + 'Xtest_challenge_owkin.csv')
-    Xtest = Xtest.iloc[:,1:]
+    Xtr, ytr = load_data(filename_Xtr, filename_ytr)
+    Xte = load_data(filename_Xte)
 
-half_Xtest = collapse_snip_pairs(Xtest)
-print(f"saving half Xte : {half_Xtest.shape}")
-np.save(DATA_PATH + '/' + 'Xtest_challenge_owkin_half.npy', half_Xtest)
-print("half_Xtest saved")
+    # create collapsed data
+    Xtr_half = collapse_snip_pairs(Xtr)
+    Xte_half = collapse_snip_pairs(Xte)
+
+    # save_data
+    filename_Xtr = filename_Xtr.replace(".csv", ".npy")
+    filename_Xtr_half = filename_Xtr.replace("Xtrain", "Xtrain_half")
+
+    filename_ytr = filename_ytr.replace(".csv", ".npy")
+    filename_Xte = filename_Xtr.replace(".csv", ".npy")
+    filename_Xte_half = filename_Xte.replace("Xtest", "Xtest_half")
+
+    save_data(Xtr, ytr, filename_Xtr, filename_ytr)
+    save_data(Xtr_half, None, filename_Xtr_half, None)
+
+    save_data(Xte, None, filename_Xte, None)
+    save_data(Xte_half, None, filename_Xte_half, None)
+
+
+if __name__ == '__main__':
+    main()
