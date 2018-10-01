@@ -82,6 +82,7 @@ class Lgbm:
         dict_res["run_time"] = round(end-start, 3)
         self.dict_res = dict_res
 
+
     def print_results(self):
         avg_auc_train, avg_auc_val = round(np.mean(self.dict_res["auc_train"]),3), round(np.mean(self.dict_res["auc_val"]),3)
         print("*********************************************************************")
@@ -90,6 +91,7 @@ class Lgbm:
         details_val = [str(d[0])+' ('+ str(d[1])+' ep)' for d in details_val]
         for auc_val, auc_dev, nep in zip(self.dict_res["auc_val"],self.dict_res["auc_dev"], self.dict_res["nepochs"]):
             print(f"- {auc_val} (dev: {auc_dev}, nep:{nep}) -")
+
 
     def save_results(self):
         # create name of directory where to save
@@ -107,6 +109,7 @@ class Lgbm:
             
         print(f"results saved in {directory}")
     
+
     def save_preds(self):
         directory = os.path.join("./experiments", self.config, "preds")
         os.makedirs(directory, exist_ok=True)
@@ -116,6 +119,7 @@ class Lgbm:
             np.save(fn_preds, preds)
             np.save(fn_labels, labels)
         print(f"predictions and labels saved in {directory}")
+
 
     def save_models(self):
         directory = os.path.join("./experiments", self.config, "models")

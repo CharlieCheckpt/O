@@ -14,7 +14,7 @@ from sklearn.metrics import roc_auc_score
 sys.path.insert(0, '../')
 from utils import load_data, DATA_PATH
 
-class Elasticnet:
+class ElasticReg:
     def __init__(self, X, y, config: str):
         self.X = X
         self.y = y
@@ -126,7 +126,7 @@ def main():
     opts = configs[config]  #  dict of all options
 
     X, y = load_data(opts["type_data"])
-    regressor = Elasticnet(X, y, config)
+    regressor = ElasticReg(X, y, config)
     regressor.cross_validation(opts["l1_ratio"], nfolds=opts["nfolds"])
     regressor.print_results()
     regressor.save_results()

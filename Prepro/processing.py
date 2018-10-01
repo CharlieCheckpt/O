@@ -47,7 +47,7 @@ def save_data(X, y, filename_X: str, filename_y:str):
 def main():
     # load data
     filename_Xtr = os.path.join(DATA_PATH, 'Xtrain_challenge_owkin.csv')
-    filename_ytr = os.path.join(DATA_PATH, 'challenge_output_data_training_file_disease_prediction_from_dna_data.csv')
+    filename_ytr = os.path.join(DATA_PATH, 'Ytrain_challenge_owkin.csv')
     filename_Xte = os.path.join(DATA_PATH, 'Xtest_challenge_owkin.csv')
 
     Xtr, ytr = load_data(filename_Xtr, filename_ytr)
