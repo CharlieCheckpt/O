@@ -2,6 +2,7 @@ import os
 import csv
 import numpy as np
 import time
+import pickle
 
 from sklearn.linear_model import ElasticNetCV
 from sklearn.metrics import roc_auc_score
@@ -99,6 +100,6 @@ class ElasticReg:
         directory = os.path.join("./experiments", self.config, "models")
         os.makedirs(directory, exist_ok=True)
         for i, regressor in enumerate(self.models):
-            filename = os.path.join(directory, "model" + str(i) + ".txt")
+            filename = os.path.join(directory, "model" + str(i) + ".pkl")
             pickle.dump(regressor, open(filename, "wb"))
         print(f"models saved : {directory}")
