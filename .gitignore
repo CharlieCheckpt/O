@@ -4,3 +4,6 @@
 *.csv
 *.pyc
 *settings.json
+*.pem
+*.vscode
+*.tar.gz

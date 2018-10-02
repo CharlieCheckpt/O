@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 import pickle
-DATA_PATH = '../data'
+DATA_PATH = '/home/checkpt/workspace/O/data'
 
 
 def load_data(type_data: str):

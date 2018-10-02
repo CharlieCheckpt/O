@@ -1,6 +1,7 @@
 test:
   type_data: "local"
   nrounds: 100
+  early_stop_rounds: 10
   nfolds: 5
   params:
     seed: 777
