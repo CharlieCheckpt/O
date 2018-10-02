@@ -21,7 +21,10 @@ def load_data(fn_X:str, fn_y=None):
 
     load_time = round(end-start, 3)
     print(f"data loaded in {load_time} seconds")
-    return X, y 
+    if fn_y is not None:
+        return X, y 
+    else:
+         return X
 
 
 def collapse_snip_pairs(X):
@@ -61,7 +64,7 @@ def main():
     filename_Xtr_half = filename_Xtr.replace("Xtrain", "Xtrain_half")
 
     filename_ytr = filename_ytr.replace(".csv", ".npy")
-    filename_Xte = filename_Xtr.replace(".csv", ".npy")
+    filename_Xte = filename_Xte.replace(".csv", ".npy")
     filename_Xte_half = filename_Xte.replace("Xtest", "Xtest_half")
 
     save_data(Xtr, ytr, filename_Xtr, filename_ytr)
