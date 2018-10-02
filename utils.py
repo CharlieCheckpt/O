@@ -29,7 +29,7 @@ def load_data(type_data: str):
     return X, y
 
 
-def convert_csv_2_hdf(filename:str):
+def convert_csv_2_hdf_linebyline(filename:str):
     """Read csv file line by line (too big to fit in memory) and write it to pickle file.
     """
     new_filename = filename.replace("csv", "pkl")
