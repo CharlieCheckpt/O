@@ -29,7 +29,7 @@ class Catboost:
         ddev = Pool(Xdev, label=ydev)
 
         bst = CatBoostClassifier(
-            objective="logLoss",
+            objective="Logloss",
             eval_metric='AUC',
             num_boost_round=nrounds,
             od_type='Iter',
@@ -40,7 +40,8 @@ class Catboost:
         )
 
         bst.fit(dtr, eval_set=ddev, logging_level="Verbose", use_best_model=True)
-        return bst
+        nepochs = bst.tree_count_
+        return bst, nepochs
 
     def cross_validation(self, nrounds: int, nfolds: int, early_stop_rounds: int):
         """Stratified cross-validation.
@@ -52,6 +53,7 @@ class Catboost:
         dict_res["auc_train"] = []  #  auc on train set
         dict_res["auc_dev"] = []  #  auc on train set
         dict_res["auc_val"] = []  #  auc on validation set
+        dict_res["nepochs"] = []
 
         skf = StratifiedKFold(nfolds, random_state=777)
         start = time.time()
@@ -62,7 +64,7 @@ class Catboost:
                 Xtr, ytr, test_size=0.2, random_state=777)
             Xval, yval = self.X[val_index], self.y[val_index]
 
-            booster = self.train(
+            booster, nepochs = self.train(
                 Xtr, ytr, Xdev, ydev, nrounds, early_stop_rounds)
             preds_tr, preds_dev, preds_val = booster.predict(
                 Xtr), booster.predict(Xdev), booster.predict(Xval)
@@ -74,6 +76,7 @@ class Catboost:
             dict_res["auc_train"].append(auc_tr)
             dict_res["auc_val"].append(auc_val)
             dict_res["auc_dev"].append(auc_dev)
+            dict_res["nepochs"].append(nepochs)
 
             avg_auc_train, avg_auc_val = round(
                 np.mean(dict_res["auc_train"]), 3), round(np.mean(dict_res["auc_val"]), 3)
