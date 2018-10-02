@@ -5,7 +5,6 @@ import os
 import numpy as np
 import pandas as pd
 
-use_rcsv = False
 sys.path.insert(0, "../")
 from utils import DATA_PATH
 
