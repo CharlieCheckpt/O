@@ -66,8 +66,9 @@ class Catboost:
 
             booster, nepochs = self.train(
                 Xtr, ytr, Xdev, ydev, nrounds, early_stop_rounds)
-            preds_tr, preds_dev, preds_val = booster.predict(
-                Xtr), booster.predict(Xdev), booster.predict(Xval)
+            # needs predict_proba() for CatBoost
+            preds_tr, preds_dev, preds_val = booster.predict_proba(
+                Xtr)[:,1], booster.predict_proba(Xdev)[:, 1], booster.predict_proba(Xval)[:, 1]
             auc_tr, auc_dev, auc_val = roc_auc_score(ytr, preds_tr), roc_auc_score(
                 ydev, preds_dev), roc_auc_score(yval, preds_val)
             auc_tr, auc_dev, auc_val = round(auc_tr, 3), round(
