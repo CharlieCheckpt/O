@@ -1,3 +1,7 @@
+"""Catboost model for binary classification.
+"""
+
+
 import os
 import csv
 import numpy as np

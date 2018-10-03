@@ -1,3 +1,6 @@
+"""Logistic regression with elastic net penalty.
+"""
+
 import os
 import csv
 import numpy as np
