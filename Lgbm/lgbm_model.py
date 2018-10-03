@@ -136,7 +136,7 @@ class Lgbm:
         """Save validation predictions and labels on folder "./experiments/"
         """
         directory = os.path.join(
-            "./experiments", self.config, self.name_data, "preds")
+            "./experiments", self.name_data, self.config, "preds")
         os.makedirs(directory, exist_ok=True)
         for i, (preds, labels) in enumerate(zip(self.predictions, self.labels)):
             fn_preds = "preds_val" + str(i) + ".npy"
@@ -150,7 +150,8 @@ class Lgbm:
     def save_models(self):
         """Save trained models in "./experiments/models".
         """
-        directory = os.path.join("./experiments", self.config, self.name_data, "models")
+        directory = os.path.join(
+            "./experiments", self.name_data, self.config, "models")
         os.makedirs(directory, exist_ok=True)
         for i, booster in enumerate(self.models):
             filename = os.path.join(directory, "model" + str(i) + ".txt")

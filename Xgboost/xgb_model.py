@@ -115,7 +115,7 @@ class Xgboost:
         in a file "./experiments/results.csv".
         """
         # create name of directory where to save
-        directory = os.path.join("./experiments", self.config)
+        directory = os.path.join("./experiments", self.name_data, self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
         with open(os.path.join(directory, 'results.csv'), 'w') as csv_file:
             writer = csv.writer(csv_file)
@@ -133,7 +133,7 @@ class Xgboost:
         """Save validation predictions and labels on folder "./experiments/"
         """
         directory = os.path.join(
-            "./experiments", self.config, self.name_data, "preds")
+            "./experiments", self.name_data, self.config, "preds")
         os.makedirs(directory, exist_ok=True)
         for i, (preds, labels) in enumerate(zip(self.predictions, self.labels)):
             fn_preds = "preds_val" + str(i) + ".npy"
@@ -147,7 +147,7 @@ class Xgboost:
     def save_models(self):
         """Save trained models in "./experiments/models".
         """
-        directory = os.path.join("./experiments", self.config, self.name_data, "models")
+        directory = os.path.join("./experiments", self.name_data, self.config, "models")
         os.makedirs(directory, exist_ok=True)
         for i, booster in enumerate(self.models):
             filename = os.path.join(directory, "model" + str(i) + ".txt")
