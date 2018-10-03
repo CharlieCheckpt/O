@@ -14,13 +14,14 @@ from catboost import Pool, CatBoostClassifier
 
 
 class Catboost:
-    def __init__(self, X, y, config: str, params: dict):
+    def __init__(self, X, y, config: str, params: dict, name_data=""):
         self.X = X
         self.y = y
-        self.predictions = []  # predictions on validation set
-        self.labels = []  # labels on validation set
         self.models = []
+        self.predictions = []
+        self.labels = []
         self.config = config
+        self.name_data = name_data
         self.params = params
 
     def train(self, Xtr, ytr, Xdev, ydev, nrounds: int, early_stop_rounds: int):
@@ -72,7 +73,7 @@ class Catboost:
                 Xtr, ytr, Xdev, ydev, nrounds, early_stop_rounds)
             # needs predict_proba() for CatBoost
             preds_tr, preds_dev, preds_val = booster.predict_proba(
-                Xtr)[:,1], booster.predict_proba(Xdev)[:, 1], booster.predict_proba(Xval)[:, 1]
+                Xtr)[:, 1], booster.predict_proba(Xdev)[:, 1], booster.predict_proba(Xval)[:, 1]
             auc_tr, auc_dev, auc_val = roc_auc_score(ytr, preds_tr), roc_auc_score(
                 ydev, preds_dev), roc_auc_score(yval, preds_val)
             auc_tr, auc_dev, auc_val = round(auc_tr, 3), round(
@@ -125,17 +126,22 @@ class Catboost:
         print(f"results saved in {directory}")
 
     def save_preds(self):
-        directory = os.path.join("./experiments", self.config, "preds")
+        """Save validation predictions and labels on folder "./experiments/"
+        """
+        directory = os.path.join(
+            "./experiments", self.config, self.name_data, "preds")
         os.makedirs(directory, exist_ok=True)
         for i, (preds, labels) in enumerate(zip(self.predictions, self.labels)):
-            fn_preds = os.path.join(directory, "preds_"+str(i)+".npy")
-            fn_labels = os.path.join(directory, "labels_"+str(i)+".npy")
+            fn_preds = "preds_val" + str(i) + ".npy"
+            fn_preds = os.path.join(directory, fn_preds)
+            fn_labels = "labels_val" + str(i) + ".npy"
+            fn_labels = os.path.join(directory, fn_labels)
             np.save(fn_preds, preds)
             np.save(fn_labels, labels)
         print(f"predictions and labels saved in {directory}")
 
     def save_models(self):
-        directory = os.path.join("./experiments", self.config, "models")
+        directory = os.path.join("./experiments", self.config, self.name_data, "models")
         os.makedirs(directory, exist_ok=True)
         for i, booster in enumerate(self.models):
             filename = os.path.join(directory, "model" + str(i) + ".txt")

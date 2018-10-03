@@ -20,10 +20,11 @@ def main():
     configs = yaml.load(open("configs.yaml"))
     opts = configs[config]  # dict of all options
     params = opts["params"]  # dict of parameters for training booster
+    name_data = opts["fn_X"].split(".")[0]  #  name of data (without extension)
     # load data
-    X, y = load_data(opts["type_data"])
+    X, y = load_data(opts["fn_X"], opts["fn_y"])
     # cross validation 
-    booster = Xgboost(X, y, config, params)
+    booster = Xgboost(X, y, config, params, name_data)
     booster.cross_validation(nrounds=opts["nrounds"], nfolds=opts["nfolds"], early_stop_rounds=opts["early_stop_rounds"])
     booster.print_results()
     booster.save_results()

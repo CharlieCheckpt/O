@@ -6,35 +6,33 @@ import pickle
 DATA_PATH = '/home/ubuntu/workspace/O/data'
 
 
-def load_data(type_data: str):
-    """Load data.
+def load_data(filename_X:str, filename_y:str):
+    """Load X and potentially y. Handles .csv and .npy.
     
     Args:
-        type_data (str): which type of data to load. "18k", "36k" or "local".
-                        
+        filename_X (str): file name of X.
+        filename_y (str): file name of y.
+    
     Returns:
-        X, y: data and labels
+        X, y: np.arrays. y is None if filename_y is None.
     """
 
     start = time.time()
-    if type_data == "local":
-        print("loading local data ...")
-        X = np.load(os.path.join(DATA_PATH, "X_local.npy"))
-        y = np.load(os.path.join(DATA_PATH, "y_local.npy"))
-
-    if type_data == "18k":
-        print("loading half data ...")
-        X = np.load(os.path.join(DATA_PATH, 'Xtrain_half_challenge_owkin.npy'))
-        y = np.load(os.path.join(DATA_PATH, 'Ytrain_challenge_owkin.npy'))
-
-    elif type == "36k":
-        print("loading full data ...")
-        #  todo: create full matrix as .npy
-        X = np.load(os.path.join(DATA_PATH, 'Xtrain_challenge_owkin.csv'))
-        y = np.load(os.path.join(DATA_PATH, 'Ytrain_challenge_owkin.npy'))
+    if ".npy" in filename_X:
+        X = np.load(os.path.join(DATA_PATH, filename_X))
+        if filename_y is not None:
+            y = np.load(os.path.join(DATA_PATH, filename_y))
+        else:
+            y = None
+    elif ".csv" in filename_X:
+        X = pd.read_csv(os.path.join(DATA_PATH, filename_X)).values
+        if filename_y is not None:
+            y = pd.read_csv(os.path.join(DATA_PATH, filename_y)).values
+        else:
+            y = None
     end = time.time()
-    print(f"data loaded in {round(end-start, 3)} seconds")
 
+    print(f"data loaded in {round(end-start, 3)} seconds")
     return X, y
 
 

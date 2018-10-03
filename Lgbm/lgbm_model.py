@@ -13,13 +13,14 @@ import lightgbm as lgb
 
 
 class Lgbm:
-    def __init__(self, X, y, config: str, params: dict):
+    def __init__(self, X, y, config: str, params: dict, name_data=""):
         self.X = X
         self.y = y
-        self.predictions = []  # predictions on validation set
-        self.labels = []  # labels on validation set
         self.models = []
+        self.predictions = []
+        self.labels = []
         self.config = config
+        self.name_data = name_data
         self.params = params
 
     def train(self, Xtr, ytr, Xdev, ydev, nrounds: int, early_stop_rounds: int):
@@ -134,11 +135,14 @@ class Lgbm:
     def save_preds(self):
         """Save validation predictions and labels on folder "./experiments/"
         """
-        directory = os.path.join("./experiments", self.config, "preds")
+        directory = os.path.join(
+            "./experiments", self.config, self.name_data, "preds")
         os.makedirs(directory, exist_ok=True)
         for i, (preds, labels) in enumerate(zip(self.predictions, self.labels)):
-            fn_preds = os.path.join(directory, "preds_"+str(i)+".npy")
-            fn_labels = os.path.join(directory, "labels_"+str(i)+".npy")
+            fn_preds = "preds_val" + str(i) + ".npy"
+            fn_preds = os.path.join(directory, fn_preds)
+            fn_labels = "labels_val" + str(i) + ".npy"
+            fn_labels = os.path.join(directory, fn_labels)
             np.save(fn_preds, preds)
             np.save(fn_labels, labels)
         print(f"predictions and labels saved in {directory}")
@@ -146,7 +150,7 @@ class Lgbm:
     def save_models(self):
         """Save trained models in "./experiments/models".
         """
-        directory = os.path.join("./experiments", self.config, "models")
+        directory = os.path.join("./experiments", self.config, self.name_data, "models")
         os.makedirs(directory, exist_ok=True)
         for i, booster in enumerate(self.models):
             filename = os.path.join(directory, "model" + str(i) + ".txt")

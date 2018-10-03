@@ -13,7 +13,7 @@ from catboost import CatBoostClassifier
 
 
 def load_data_2_predict(data_name: str):
-    """Load data to predict from.
+    """Load data to predict from (.csv or .npy file).
     
     Args:
         data_name (str): name of data (data must be under directory ../data/)
@@ -34,18 +34,19 @@ def load_data_2_predict(data_name: str):
     return X
 
 
-def load_models(config: str):
+def load_cb_models(config: str, name_data:str):
     """Load models trained with config.
     
     Args:
         config (str): name of config.
+        name_data(str): name of data.
     
     Returns:
         list: list of trained models.
     """
 
     models = []
-    path2models = os.path.join("./experiments", config, "models")
+    path2models = os.path.join("./experiments", config, name_data, "models")
     for model in glob.glob(os.path.join(path2models, "*.txt")):
         booster = CatBoostClassifier()
         booster.load_model(model)
@@ -55,7 +56,7 @@ def load_models(config: str):
     return models
 
 
-def get_predictions(X, models):
+def get_cb_predictions(X, models):
     """Computes predictions (average of predictions from all trained models).
     
     Args:
@@ -99,22 +100,22 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="test",
                         type=str, help="config for predicting.")
-    parser.add_argument("--data", default="X_local.csv",
+    parser.add_argument("--fn_data", default="X_local.csv",
                         type=str, help="data to use for predicting.")
     args = parser.parse_args()
     config = args.config  # name of config
-    data_name = args.data
+    name_data = args.fn_data.split(".")[0]  #  name of data (without extension)
     print(f"\n ----> You chose to predict with config : {config} <---- \n")
-    print(f"\n ----> You chose to predict data : {data_name} <---- \n")
+    print(f"\n ----> You chose to predict data : {args.fn_data} <---- \n")
 
     # load data
-    X = load_data_2_predict(data_name=data_name)
+    X, _ = load_data(filename_X=args.fn_data, filename_y=None)
     # Load trained models
-    models = load_models(config)
+    models = load_cb_models(config, args.type_data)
     # get predictions
-    preds = get_predictions(X, models)
+    preds = get_cb_predictions(X, models)
     # save predictions
-    save_predictions(preds, config, data_name)
+    save_predictions(preds, config, name_data)
 
 
 if __name__ == '__main__':

@@ -19,9 +19,10 @@ def main():
     # load config
     configs = yaml.load(open("configs.yaml"))
     opts = configs[config]  #  dict of all options
-
-    X, y = load_data(opts["type_data"])
-    regressor = ElasticReg(X, y, config)
+    name_data = opts["fn_X"].split(".")[0]  #  name of data (without extension)
+    # load data
+    X, y = load_data(opts["fn_X"], opts["fn_y"])
+    regressor = ElasticReg(X, y, config, name_data)
     regressor.cross_validation(opts["l1_ratio"], nfolds=opts["nfolds"])
     regressor.print_results()
     regressor.save_results()

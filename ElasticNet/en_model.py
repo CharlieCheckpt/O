@@ -13,13 +13,14 @@ from sklearn.model_selection import StratifiedKFold
 
 
 class ElasticReg:
-    def __init__(self, X, y, config: str):
+    def __init__(self, X, y, config: str, name_data=""):
         self.X = X
         self.y = y
         self.predictions = []  # predictions on validation set
         self.labels = []  # labels on validation set
         self.models = []  # trained models
         self.config = config  # name of config used
+        self.name_data = name_data # name of data
 
     def train(self, Xtr, ytr, l1_ratio: float):
         """Trains a cross-validated (on train set) elastic net model.
@@ -116,23 +117,23 @@ class ElasticReg:
     def save_preds(self):
         """Save validation predictions and labels on folder "./experiments/"
         """
-
-        directory = os.path.join("./experiments", self.config, "preds")
+        directory = os.path.join(
+            "./experiments", self.config, self.name_data, "preds")
         os.makedirs(directory, exist_ok=True)
         for i, (preds, labels) in enumerate(zip(self.predictions, self.labels)):
-            fn_preds = os.path.join(directory, "preds_"+str(i)+".npy")
-            fn_labels = os.path.join(directory, "labels_"+str(i)+".npy")
+            fn_preds = "preds_val" + str(i) + ".npy"
+            fn_preds = os.path.join(directory, fn_preds)
+            fn_labels = "labels_val" + str(i) + ".npy"
+            fn_labels = os.path.join(directory, fn_labels)
             np.save(fn_preds, preds)
             np.save(fn_labels, labels)
         print(f"predictions and labels saved in {directory}")
 
     def save_models(self):
-        """Save trained models in "./experiments/models".
-        """
-
-        directory = os.path.join("./experiments", self.config, "models")
+        directory = os.path.join(
+            "./experiments", self.config, self.name_data, "models")
         os.makedirs(directory, exist_ok=True)
-        for i, regressor in enumerate(self.models):
-            filename = os.path.join(directory, "model" + str(i) + ".pkl")
-            pickle.dump(regressor, open(filename, "wb"))
+        for i, booster in enumerate(self.models):
+            filename = os.path.join(directory, "model" + str(i) + ".txt")
+            booster.save_model(filename, format="cbm")
         print(f"models saved : {directory}")

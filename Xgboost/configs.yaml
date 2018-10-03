@@ -1,5 +1,6 @@
 test:
-  type_data: "local"
+  fn_X: "X_local.csv"
+  fn_y: "y_local.csv"
   nrounds: 100
   early_stop_rounds: 10
   nfolds: 5
