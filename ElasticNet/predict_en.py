@@ -14,18 +14,18 @@ sys.path.insert(0, "../")
 from utils import load_data
 
 
-def load_en_models(config: str, name_data: str):
+def load_en_models(config: str, name_data_train: str):
     """Load models trained with config.
     
     Args:
         config (str): name of config.
-        name_data (str): name of data.
+        name_data_train (str): name of data.
     
     Returns:
         list: list of trained models.
     """
     models = []
-    path2models = os.path.join("./experiments", config, name_data, "models")
+    path2models = os.path.join("./experiments", config, name_data_train, "models")
     for model in glob.glob(os.path.join(path2models, "*.pkl")):
         print(f"model {model} loaded")
         regr = pickle.load(open(model, "rb"))
@@ -62,7 +62,7 @@ def save_predictions(predictions, config: str, name_data: str):
         config (str): name of config.
         name_data (str): name of data.
     """
-    path2preds = os.path.join("./experiments", config, "final_preds")
+    path2preds = os.path.join("./experiments", config, name_data)
     # remove extension name
     fn_preds = "preds_" + name_data.split(".")[0] + ".csv"
     # Create folder
@@ -88,7 +88,8 @@ def main():
     # load data
     X, _ = load_data(filename_X=args.fn_X, filename_y=None)
     # Load trained models
-    models = load_en_models(config, args.type_data)
+    name_data_train = name_data.replace("test", "train")
+    models = load_en_models(config, name_data_train)
     # get predictions
     preds = get_en_predictions(X, models)
     # save predictions
