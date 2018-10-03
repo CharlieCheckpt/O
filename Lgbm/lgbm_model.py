@@ -118,7 +118,7 @@ class Lgbm:
         in a file "./experiments/results.csv".
         """
         # create name of directory where to save
-        directory = os.path.join("./experiments", self.config)
+        directory = os.path.join("./experiments", self.name_data, self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
         with open(os.path.join(directory, 'results.csv'), 'w') as csv_file:
             writer = csv.writer(csv_file)

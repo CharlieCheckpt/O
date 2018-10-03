@@ -12,7 +12,7 @@ def main():
     # parse config
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="test",
-                        type=str, help="config for running Unet.")
+                        type=str, help="config for running cross validation.")
     args = parser.parse_args()
     config = args.config  # name of config
     print(f"\n ----> You chose config : {config} <---- \n")
