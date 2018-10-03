@@ -14,6 +14,8 @@ from catboost import CatBoostClassifier
 sys.path.insert(0, "../")
 from utils import load_data
 
+# know where the script is from inside the script
+PATH_SCRIPT = os.path.dirname(os.path.realpath(__file__))
 
 def load_cb_models(config: str, name_data_train:str):
     """Load models trained with config.
@@ -27,7 +29,7 @@ def load_cb_models(config: str, name_data_train:str):
     """
 
     models = []
-    path2models = os.path.join("./experiments", name_data_train, config, "models")
+    path2models = os.path.join(PATH_SCRIPT, "experiments", name_data_train, config, "models")
     for model in glob.glob(os.path.join(path2models, "*.txt")):
         booster = CatBoostClassifier()
         booster.load_model(model)
@@ -68,7 +70,7 @@ def save_predictions(predictions, config: str, name_data: str):
         config (str): name of config.
         name_data (str): name of data.
     """
-    path2preds = os.path.join("./experiments", name_data, config)
+    path2preds = os.path.join(PATH_SCRIPT, "experiments", name_data, config)
     # remove extension name
     fn_preds = "preds.csv"
     # Create folder

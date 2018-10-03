@@ -6,6 +6,9 @@ import glob
 import argparse
 import numpy as np
 import pandas as pd
+import uuid
+import csv
+
 # Import functions corresponding to each type of models
 sys.path.insert(0, "../Xgboost/")
 from predict_xgb import load_xgb_models, get_xgb_predictions
@@ -13,41 +16,45 @@ sys.path.insert(0, "../Lgbm/")
 from predict_lgbm import load_lgb_models, get_lgb_predictions
 sys.path.insert(0, "../Catboost/")
 from predict_cb import load_cb_models, get_cb_predictions
-sys.path.insert(0, "../Elasticnet/")
-from predict_elasticnet import load_en_models, get_en_predictions
+sys.path.insert(0, "../ElasticNet/")
+from predict_en import load_en_models, get_en_predictions
 sys.path.insert(0, "../")
 from utils import load_data
 
-def get_model_predictions(X, type_model: str, config: str, name_data:str):
+# know where the script is from inside the script
+PATH_SCRIPT = os.path.dirname(os.path.realpath(__file__))
+
+def get_model_predictions(X, type_model: str, config: str, name_data_train:str):
     
     if type_model == "Xgboost":
-        models = load_xgb_models(config, name_data)
+        models = load_xgb_models(config, name_data_train)
         preds = get_xgb_predictions(X, models)
-        print(f"Xgboost predictions computed (config:{config}, data type:{name_data})")
+        print(f"Xgboost predictions computed (config:{config}, data type:{name_data_train})")
     elif type_model == "Lgbm":
-        models = load_lgb_models(config, name_data)
+        models = load_lgb_models(config, name_data_train)
         preds = get_lgb_predictions(X, models)
         print(
-            f"Lgbm predictions computed (config:{config}, data type:{name_data}")
+            f"Lgbm predictions computed (config:{config}, data type:{name_data_train})")
     elif type_model == "Catboost":
-        models = load_cb_models(config, name_data)
+        models = load_cb_models(config, name_data_train)
         preds = get_cb_predictions(X, models)
         print(
-            f"Catboost predictions computed (config:{config}, data type:{name_data}")
-    elif type_model == "Elasticnet":
-        models = load_en_models(config, name_data)
+            f"Catboost predictions computed (config:{config}, data type:{name_data_train})")
+    elif type_model == "ElasticNet":
+        models = load_en_models(config, name_data_train)
         preds = get_en_predictions(X, models)
         print(
-            f"Elasticnet predictions computed (config:{config}, data type:{name_data}")
+            f"Elasticnet predictions computed (config:{config}, data type:{name_data_train})")
 
     return preds
 
 
 
 def get_blend_predictions(X, type_models:list, configs:list, name_data:str):
+    name_data_train= name_data.replace("test", "train")
     preds = []
     for type_model, config in zip(type_models, configs):
-        preds.append(get_model_predictions(X, type_model, config, name_data))
+        preds.append(get_model_predictions(X, type_model, config, name_data_train))
     # convert list to matrix
     preds = np.array(preds)
     preds = np.mean(preds, 0)
@@ -56,22 +63,45 @@ def get_blend_predictions(X, type_models:list, configs:list, name_data:str):
 
 
 
-def save_blend_preds(preds, models: list, configs: list, name_data: str):
-    print("Blended predictions saved in ")
-    raise NotImplementedError
+def save_blend_preds(preds, type_models: list, configs: list, name_data: str):
+    
+    preds_dir = os.path.join(PATH_SCRIPT, "preds", name_data)
+    os.makedirs(preds_dir, exist_ok=True)
+
+    # get unique filename
+    unique_id = str(uuid.uuid4())
+    fn_preds = "preds_" + unique_id + ".csv"
+    fn_info_preds = "info_preds_" + unique_id + ".csv"
+    fn_preds = os.path.join(preds_dir, fn_preds)
+    fn_info_preds = os.path.join(preds_dir, fn_info_preds)
+
+    np.savetxt(fn_preds, preds)
+    with open(fn_info_preds, 'w') as csv_file:
+        writer = csv.writer(csv_file)
+        # write info
+        writer.writerow(["name_data", name_data])
+        writer.writerow(["type_models", type_models])
+        writer.writerow(["configs", configs])
+
+    print(f"Blended predictions saved in {fn_preds}")
+    print(f"Blended predictions info saved in {fn_info_preds}")
 
 
 def main():
     # parse config
     parser = argparse.ArgumentParser()
     # must be in ["Xgboost", "Lgbm", "ElasticNet", "Catboost"]
-    parser.add_argument("--type_models", type=list, help="list of models.")
-    parser.add_argument("--configs", type=list, help="list of configs.")
-    parser.add_argument("--filename", type=str, help="name of data to predict")
+    parser.add_argument("--type_models", type=str, default = "Xgboost Catboost Lgbm ElasticNet", help="models separated by a space.")
+    parser.add_argument("--configs", type=str, default="test test test test", help="configs separated by a space, e.g. <31leaves 70leaves 31leaves lr3>")
+    parser.add_argument("--filename", type=str, default="X_local.csv", help="name of data to predict")
     
     args = parser.parse_args()
+    # convert string to list of strings
+    args.type_models = args.type_models.split(' ')
+    args.configs = args.configs.split(' ')
+
     name_data = args.filename.split(".")[0]
-    X, _ = load_data(args.filename)
+    X, _ = load_data(args.filename, None)
     # get average predictions from all models/configs
     blend_preds = get_blend_predictions(X, args.type_models, args.configs, name_data)
     # save blended predictions
