@@ -1,7 +1,5 @@
 """Catboost model for binary classification.
 """
-
-
 import os
 import csv
 import numpy as np
@@ -43,7 +41,6 @@ class Catboost:
             logging_level='Silent',
             **self.params
         )
-
         bst.fit(dtr, eval_set=ddev, logging_level="Verbose", use_best_model=True)
         nepochs = bst.tree_count_
         return bst, nepochs
@@ -111,7 +108,7 @@ class Catboost:
 
     def save_results(self):
         # create name of directory where to save
-        directory = os.path.join("./experiments", self.config)
+        directory = os.path.join("./experiments", self.name_data, self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
         with open(os.path.join(directory, 'results.csv'), 'w') as csv_file:
             writer = csv.writer(csv_file)
