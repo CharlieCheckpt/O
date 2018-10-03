@@ -59,7 +59,7 @@ class Xgboost:
             Xtr, ytr = self.X[train_index], self.y[train_index]
             # creation of dev set for early stopping
             Xtr, Xdev, ytr, ydev = train_test_split(
-                Xtr, ytr, test_size=0.2, random_state=777)
+                Xtr, ytr, test_size=0.2, stratify=ytr, random_state=777)
             Xval, yval = self.X[val_index], self.y[val_index]
 
             dtr = xgb.DMatrix(Xtr, ytr)

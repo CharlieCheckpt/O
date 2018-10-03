@@ -6,7 +6,7 @@ import pickle
 
 from sklearn.linear_model import ElasticNetCV
 from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import StratifiedKFold
 
 
 class ElasticReg:
