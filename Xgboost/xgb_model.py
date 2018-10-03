@@ -20,10 +20,16 @@ class Xgboost:
         self.params = params
 
     def train(self, dtr, ddev, nrounds: int, early_stop_rounds: int):
-        """Trains booster.
+        """Trains booster with early stopping on a dev set.
+        
+        Args:
+            dtr (xgb.DMatrix): 
+            ddev (xgb.DMatrix): 
+            nrounds (int): number of maximum rounds.
+            early_stop_rounds (int): number of non-improving rounds before early stopping.
+        
         Returns:
-            model
-            dict eval result
+            [model, history]: trained model and history of training on dev set.
         """
         history_eval = {}
         bst = xgb.train(self.params, dtr, nrounds, evals=[(dtr, "train"), (ddev, '"dev')],
@@ -33,6 +39,11 @@ class Xgboost:
 
     def cross_validation(self, nrounds: int, nfolds: int, early_stop_rounds: int):
         """Stratified cross-validation.
+        
+        Args:
+            nrounds (int): number of maximum rounds.
+            nfolds (int): number of folds.
+            early_stop_rounds (int): number of non-improving rounds before early stopping.
         """
         # useful for saving later
         self.nrounds = nrounds
@@ -83,19 +94,24 @@ class Xgboost:
             self.models.append(booster)
 
     def print_results(self):
-            avg_auc_train, avg_auc_val = round(np.mean(self.dict_res["auc_train"]), 3), round(
-                np.mean(self.dict_res["auc_val"]), 3)
-            print("*********************************************************************")
-            print(
-                f"Average Auc on train : {avg_auc_train}, val: {avg_auc_val}")
-            details_val = [(auc, nepochs) for auc, nepochs in zip(
-                self.dict_res["auc_val"], self.dict_res["nepochs"])]
-            details_val = [
-                str(d[0])+' (' + str(d[1])+' ep)' for d in details_val]
-            for auc_val, auc_dev, nep in zip(self.dict_res["auc_val"], self.dict_res["auc_dev"], self.dict_res["nepochs"]):
-                print(f"- {auc_val} (dev: {auc_dev}, nep:{nep}) -")
+        """Print results (auc) per fold.
+        """
+        avg_auc_train, avg_auc_val = round(np.mean(self.dict_res["auc_train"]), 3), round(
+            np.mean(self.dict_res["auc_val"]), 3)
+        print("*********************************************************************")
+        print(
+            f"Average Auc on train : {avg_auc_train}, val: {avg_auc_val}")
+        details_val = [(auc, nepochs) for auc, nepochs in zip(
+            self.dict_res["auc_val"], self.dict_res["nepochs"])]
+        details_val = [
+            str(d[0])+' (' + str(d[1])+' ep)' for d in details_val]
+        for auc_val, auc_dev, nep in zip(self.dict_res["auc_val"], self.dict_res["auc_dev"], self.dict_res["nepochs"]):
+            print(f"- {auc_val} (dev: {auc_dev}, nep:{nep}) -")
 
     def save_results(self):
+        """Save results (auc, number of non zero coef) and parameters (l1 ratio) 
+        in a file "./experiments/results.csv".
+        """
         # create name of directory where to save
         directory = os.path.join("./experiments", self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
@@ -112,6 +128,8 @@ class Xgboost:
         print(f"results saved in {directory}")
 
     def save_preds(self):
+        """Save validation predictions and labels on folder "./experiments/"
+        """
         directory = os.path.join("./experiments", self.config, "preds")
         os.makedirs(directory, exist_ok=True)
         for i, (preds, labels) in enumerate(zip(self.predictions, self.labels)):
@@ -122,6 +140,8 @@ class Xgboost:
         print(f"predictions and labels saved in {directory}")
 
     def save_models(self):
+        """Save trained models in "./experiments/models".
+        """
         directory = os.path.join("./experiments", self.config, "models")
         os.makedirs(directory, exist_ok=True)
         for i, booster in enumerate(self.models):

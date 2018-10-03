@@ -15,15 +15,32 @@ class ElasticReg:
         self.y = y
         self.predictions = []  # predictions on validation set
         self.labels = []  # labels on validation set
-        self.models = []
-        self.config = config
+        self.models = []  # trained models
+        self.config = config  # name of config used
 
     def train(self, Xtr, ytr, l1_ratio: float):
+        """Trains a cross-validated (on train set) elastic net model.
+        
+        Args:
+            Xtr (np.array): 
+            ytr (np.array): 
+            l1_ratio (float): ratio between l1 and l2 penalty.
+        
+        Returns:
+            model: cross validated elastic net model.
+        """
+
         regr = ElasticNetCV(l1_ratio=l1_ratio, cv=3, n_jobs=-1)
         regr.fit(Xtr, ytr)
         return regr
 
     def cross_validation(self, l1_ratio: float, nfolds: int):
+        """Cross-validation to assess performance of model.
+        
+        Args:
+            l1_ratio (float): ratio between l1 and l2 penalty.
+            nfolds (int): number of Stratified folds for cross-validation.
+        """
 
         self.l1_ratio = l1_ratio
         dict_res = {}
@@ -65,6 +82,9 @@ class ElasticReg:
         self.dict_res = dict_res
 
     def print_results(self):
+        """Print results (auc, number of non zero coefficients) per fold.
+        """
+
         avg_auc_train, avg_auc_val = round(np.mean(self.dict_res["auc_train"]), 3), round(
             np.mean(self.dict_res["auc_val"]), 3)
         print("*********************************************************************")
@@ -73,6 +93,10 @@ class ElasticReg:
             print(f"- {auc_val} (nnz coef:{nnz_coef}) -")
 
     def save_results(self):
+        """Save results (auc, number of non zero coef) and parameters (l1 ratio) 
+        in a file "./experiments/results.csv".
+        """
+
         # create name of directory where to save
         directory = os.path.join("./experiments", self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
@@ -87,6 +111,9 @@ class ElasticReg:
         print(f"results saved in {directory}")
 
     def save_preds(self):
+        """Save validation predictions and labels on folder "./experiments/"
+        """
+
         directory = os.path.join("./experiments", self.config, "preds")
         os.makedirs(directory, exist_ok=True)
         for i, (preds, labels) in enumerate(zip(self.predictions, self.labels)):
@@ -97,6 +124,9 @@ class ElasticReg:
         print(f"predictions and labels saved in {directory}")
 
     def save_models(self):
+        """Save trained models in "./experiments/models".
+        """
+
         directory = os.path.join("./experiments", self.config, "models")
         os.makedirs(directory, exist_ok=True)
         for i, regressor in enumerate(self.models):
