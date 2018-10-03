@@ -25,7 +25,7 @@ def load_en_models(config: str, name_data_train: str):
         list: list of trained models.
     """
     models = []
-    path2models = os.path.join("./experiments", config, name_data_train, "models")
+    path2models = os.path.join("./experiments", name_data_train, config, "models")
     for model in glob.glob(os.path.join(path2models, "*.pkl")):
         print(f"model {model} loaded")
         regr = pickle.load(open(model, "rb"))
@@ -44,9 +44,11 @@ def get_en_predictions(X, models):
     Returns:
         np.array: predictions.
     """
-    preds = np.zeros((len(models), len(X)))
-    for i, model in enumerate(models):
-        preds[i] = model.predict(X)
+    preds = []
+    for model in models:
+        preds.append(model.predict(X))
+    # convert list to matrix 
+    preds = np.array(preds)
     preds = np.mean(preds, axis=0)
     preds = np.expand_dims(preds, 1)
     assert preds.shape == (len(X), 1), preds.shape
@@ -62,9 +64,9 @@ def save_predictions(predictions, config: str, name_data: str):
         config (str): name of config.
         name_data (str): name of data.
     """
-    path2preds = os.path.join("./experiments", config, name_data)
+    path2preds = os.path.join("./experiments", name_data, config)
     # remove extension name
-    fn_preds = "preds_" + name_data.split(".")[0] + ".csv"
+    fn_preds = "preds.csv"
     # Create folder
     os.makedirs(path2preds, exist_ok=True)  #  overwrite
     # save in thois folder
@@ -88,6 +90,7 @@ def main():
     # load data
     X, _ = load_data(filename_X=args.fn_X, filename_y=None)
     # Load trained models
+    # models are trained on name_data_train
     name_data_train = name_data.replace("test", "train")
     models = load_en_models(config, name_data_train)
     # get predictions

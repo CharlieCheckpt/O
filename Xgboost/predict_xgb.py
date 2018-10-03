@@ -10,41 +10,22 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
-
-def load_data_2_predict(data_name: str):
-    """Load data to predict from.
-    
-    Args:
-        data_name (str): name of data (data must be under directory ../data/)
-    
-    Returns:
-        np.array: data
-    """
-    filename = os.path.join("../data/", data_name)
-    if ".csv" in data_name:
-        X = pd.read_csv(filename, index_col=0).values
-    elif ".npy" in data_name:
-        X = np.load(filename)
-    else:
-        print(f"data file {data_name} not recognized")
-        sys.exit(1)
-    X = xgb.DMatrix(X)  # avoid error when predicting later
-    print(f"data loaded")
-    return X
+sys.path.insert(0, "../")
+from utils import load_data
 
 
-def load_xgb_models(config: str, name_data:str):
+def load_xgb_models(config: str, name_data_train:str):
     """Load models trained with config.
     
     Args:
         config (str): name of config.
-        name_data(str): name of data.
+        name_data_train(str): name of data.
     
     Returns:
         list: list of trained models.
     """
     models = []
-    path2models = os.path.join("./experiments", config, name_data, "models")
+    path2models = os.path.join("./experiments", name_data_train, config, "models")
     for model in glob.glob(os.path.join(path2models, "*.txt")):
         print(f"model {model} loaded")
         booster = xgb.Booster()
@@ -64,27 +45,29 @@ def get_xgb_predictions(X, models):
     Returns:
         np.array: predictions.
     """
-    preds = np.zeros((len(models), X.num_row()))
-    for i, model in enumerate(models):
-        preds[i] = model.predict(X)
+    preds = []
+    for model in models:
+        preds.append(model.predict(xgb.DMatrix(X)))
+    # convert list to matrix
+    preds = np.array(preds)
     preds = np.mean(preds, axis=0)
     preds = np.expand_dims(preds, 1)
-    assert preds.shape == (X.num_row(), 1), preds.shape
+    assert preds.shape == (len(X), 1), preds.shape
     print("average of predictions computed")
     return preds
 
 
-def save_predictions(predictions, config: str, data_name: str):
+def save_predictions(predictions, config: str, name_data: str):
     """Save predictions as predictions_<data_name>.csv in path2preds.
     
     Args:
         predictions (np.array):
         config (str): name of config.
-        data_name (str): name of data.
+        name_data (str): name of data.
     """
-    path2preds = os.path.join("./predictions", config)
+    path2preds = os.path.join("./experiments", name_data, config)
     # remove extension name
-    fn_preds = "preds_" + data_name.split(".")[0] + ".csv"
+    fn_preds = "preds.csv"
     # Create folder
     os.makedirs(path2preds, exist_ok=True)  #  overwrite
     # save in thois folder
@@ -97,18 +80,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="test",
                         type=str, help="config for predicting.")
-    parser.add_argument("--fn_data", default="X_local.csv",
+    parser.add_argument("--fn_X", default="X_local.csv",
                         type=str, help="data to use for predicting.")
     args = parser.parse_args()
     config = args.config  # name of config
-    name_data = args.fn_data.split(".")[0]  # name of data (without extension)
+    name_data = args.fn_X.split(".")[0]  # name of data (without extension)
     print(f"\n ----> You chose to predict with config : {config} <---- \n")
-    print(f"\n ----> You chose to predict data : {args.fn_data} <---- \n")
+    print(f"\n ----> You chose to predict data : {args.fn_X} <---- \n")
 
     # load data
-    X, _ = load_data(filename_X=args.fn_data, filename_y=None)
+    X, _ = load_data(filename_X=args.fn_X, filename_y=None)
     # Load trained models
-    models = load_xgb_models(config, args.type_data)
+    # models are trained on name_data_train
+    name_data_train = name_data.replace("test", "train")
+    models = load_xgb_models(config, name_data_train)
     # get predictions
     preds = get_xgb_predictions(X, models)
     # save predictions
