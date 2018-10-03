@@ -12,4 +12,4 @@ Predict on a dataset with
 `python predict_cb.py --config <name config> --data <name data>`.
 
 Dataset must be under the directory `O/data/`.
-Predictions are saved under `O/Catboost/experiments/<name config>/final_preds`.
+Predictions will be saved in `./experiments/<name config>/final_preds/preds_<name data>`

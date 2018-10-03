@@ -11,4 +11,4 @@ Predict on a dataset with
 `python predict_lgbm.py --config <name config> --data <name data>`.
 
 Dataset must be under the directory `O/data/`.
-
+Predictions will be saved in `./experiments/<name config>/final_preds/preds_<name data>`
