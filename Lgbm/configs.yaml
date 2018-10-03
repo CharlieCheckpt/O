@@ -1,5 +1,6 @@
 test:
-  type_data: "local"
+  fn_X: "X_local.csv"
+  fn_y: "y_local.csv"
   nfolds: 5
   nrounds: 100
   early_stop_rounds: 10
@@ -13,7 +14,8 @@ test:
 
 # num_leaves
 31leaves:
-  type_data: "18k"
+  fn_X: "X_half_train_challenge_owkin.npy"
+  fn_y: "Y_half_train_challenge_owkin.npy"
   nfolds: 5
   nrounds: 5000
   early_stop_rounds: 100
@@ -25,7 +27,8 @@ test:
     num_threads: 30
 
 70leaves:
-  type_data: "18k"
+  fn_X: "X_half_train_challenge_owkin.npy"
+  fn_y: "Y_half_train_challenge_owkin.npy"
   nfolds: 5
   nrounds: 5000
   early_stop_rounds: 100
@@ -38,7 +41,8 @@ test:
 
 
 120leaves:
-  type_data: "18k"
+  fn_X: "X_half_train_challenge_owkin.npy"
+  fn_y: "Y_half_train_challenge_owkin.npy"
   nfolds: 5
   nrounds: 5000
   early_stop_rounds: 100
