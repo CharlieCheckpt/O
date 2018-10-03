@@ -1,3 +1,8 @@
+"""Preprocess data.
+Loads .csv original train and test files (it's slow) and saves it as .npy.
+Also collapses SNP pairs for Xtrain and Xtest and save the new dataset as .npy,
+which has 18k columns instead of 36k).
+"""
 import sys
 import time
 import os
