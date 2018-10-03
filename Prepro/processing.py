@@ -9,6 +9,16 @@ sys.path.insert(0, "../")
 from utils import DATA_PATH
 
 def load_data(fn_X:str, fn_y=None):
+    """load data (X and potentially y)
+    
+    Args:
+        fn_X (str): X filename.
+        fn_y (str, optional): Defaults to None. y filename.
+    
+    Returns:
+        X, potentially y:
+    """
+
     start = time.time()
     # load X
     X = pd.read_csv(fn_X)
@@ -28,6 +38,16 @@ def load_data(fn_X:str, fn_y=None):
 
 
 def collapse_snip_pairs(X):
+    """Sum SNP pairwise to reduce size of the matrix from 36k columns to 18k.
+    
+    Args:
+        X (pd.DataFrame):
+    
+    Returns:
+        half_X (np.array):
+    """
+
+    
     N, M = X.shape
 
     half_X = np.zeros((N, int(M/2)))
@@ -37,8 +57,16 @@ def collapse_snip_pairs(X):
     return half_X
 
 
-def save_data(X, y, filename_X: str, filename_y:str):
+def save_data(X, y, filename_X:str, filename_y:str):
+    """save X and y.
     
+    Args:
+        X (np.array): 
+        y (np.array): 
+        filename_X (str): filename of X.
+        filename_y (str): filename of y.
+    """
+
     np.save(filename_X, X)
     print(f"data saved : {filename_X}")
     if y is not None:

@@ -7,6 +7,15 @@ DATA_PATH = '/home/ubuntu/workspace/O/data'
 
 
 def load_data(type_data: str):
+    """Load data.
+    
+    Args:
+        type_data (str): which type of data to load. "18k", "36k" or "local".
+                        
+    Returns:
+        X, y: data and labels
+    """
+
     start = time.time()
     if type_data == "local":
         print("loading local data ...")
