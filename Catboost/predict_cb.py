@@ -1,3 +1,6 @@
+"""Predict from data given by user with models trained with config.
+"""
+
 import sys
 import argparse
 import os
@@ -10,8 +13,15 @@ from catboost import CatBoostClassifier
 
 
 def load_data_2_predict(data_name: str):
-    """Load data to predict.
+    """Load data to predict from.
+    
+    Args:
+        data_name (str): name of data (data must be under directory ../data/)
+    
+    Returns:
+        np.array: data
     """
+
     filename = os.path.join("../data/", data_name)
     if ".csv" in data_name:
         X = pd.read_csv(filename).values
@@ -25,8 +35,15 @@ def load_data_2_predict(data_name: str):
 
 
 def load_models(config: str):
-    """Load trained models corresponding to config.
+    """Load models trained with config.
+    
+    Args:
+        config (str): name of config.
+    
+    Returns:
+        list: list of trained models.
     """
+
     models = []
     path2models = os.path.join("./experiments", config, "models")
     for model in glob.glob(os.path.join(path2models, "*.txt")):
@@ -39,8 +56,16 @@ def load_models(config: str):
 
 
 def get_predictions(X, models):
-    '''Get predictions (average of predictions from all models loaded).
-    '''
+    """Computes predictions (average of predictions from all trained models).
+    
+    Args:
+        X (np.array): matrix to predict from.
+        models (list): list of trained models.
+    
+    Returns:
+        np.array: predictions.
+    """
+
     preds = np.zeros((len(models), len(X)))
     for i, model in enumerate(models):
         preds[i] = model.predict(X)
@@ -52,8 +77,13 @@ def get_predictions(X, models):
 
 
 def save_predictions(predictions, config: str, data_name: str):
-    '''Save predictions as .csv .
-    '''
+    """Save predictions as predictions_<data_name>.csv in path2preds.
+    
+    Args:
+        predictions (np.array):
+        config (str): name of config.
+        data_name (str): name of data.
+    """
     path2preds = os.path.join("./experiments", config, "final_preds")
     # remove extension name
     fn_preds = "preds_" + data_name.split(".")[0] + ".csv"
