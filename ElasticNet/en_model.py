@@ -133,7 +133,7 @@ class ElasticReg:
         directory = os.path.join(
             "./experiments", self.name_data, self.config, "models")
         os.makedirs(directory, exist_ok=True)
-        for i, booster in enumerate(self.models):
-            filename = os.path.join(directory, "model" + str(i) + ".txt")
-            booster.save_model(filename, format="cbm")
+        for i, regr in enumerate(self.models):
+            filename = os.path.join(directory, "model" + str(i) + ".pkl")
+            pickle.dump(regr, open(filename,"wb"))
         print(f"models saved : {directory}")
