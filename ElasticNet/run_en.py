@@ -5,7 +5,7 @@ import yaml
 import sys
 sys.path.insert(0, "../")
 from utils import load_data
-from elasticnet_model import ElasticReg
+from en_model import ElasticReg
 
 
 def main():
