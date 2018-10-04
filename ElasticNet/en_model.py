@@ -21,6 +21,7 @@ class ElasticReg:
         self.models = []  # trained models
         self.config = config  # name of config used
         self.name_data = name_data # name of data
+        self.dict_res = {}  # dictionary of cross validation results
 
     def train(self, Xtr, ytr, l1_ratio: float):
         """Trains a cross-validated (on train set) elastic net model.

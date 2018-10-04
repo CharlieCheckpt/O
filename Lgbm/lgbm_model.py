@@ -22,6 +22,7 @@ class Lgbm:
         self.config = config
         self.name_data = name_data
         self.params = params
+        self.dict_res = {}
 
     def train(self, Xtr, ytr, Xdev, ydev, nrounds: int, early_stop_rounds: int):
         """Trains booster with early stopping on a dev set.
