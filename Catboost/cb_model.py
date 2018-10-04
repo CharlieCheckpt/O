@@ -119,6 +119,9 @@ class Catboost:
             # write results
             for key, value in self.dict_res.items():
                 writer.writerow([key, value])
+            writer.writerow(["mean_auc_val", round(
+                    np.mean(self.dict_res["auc_val"]), 3)])
+
 
         print(f"results saved in {directory}")
 

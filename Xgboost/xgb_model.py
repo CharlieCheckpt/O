@@ -10,6 +10,7 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 
 import xgboost as xgb
 
+
 class Xgboost:
     def __init__(self, X, y, config: str, params: dict, name_data=""):
         self.X = X
@@ -126,6 +127,8 @@ class Xgboost:
             # write results
             for key, value in self.dict_res.items():
                 writer.writerow([key, value])
+            writer.writerow(["mean_auc_val", round(
+                np.mean(self.dict_res["auc_val"]), 3)])
 
         print(f"results saved in {directory}")
 
@@ -147,7 +150,8 @@ class Xgboost:
     def save_models(self):
         """Save trained models in "./experiments/models".
         """
-        directory = os.path.join("./experiments", self.name_data, self.config, "models")
+        directory = os.path.join(
+            "./experiments", self.name_data, self.config, "models")
         os.makedirs(directory, exist_ok=True)
         for i, booster in enumerate(self.models):
             filename = os.path.join(directory, "model" + str(i) + ".txt")

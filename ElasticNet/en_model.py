@@ -34,7 +34,7 @@ class ElasticReg:
             model: cross validated elastic net model.
         """
 
-        regr = ElasticNetCV(l1_ratio=l1_ratio, cv=3, n_jobs=-1)
+        regr = ElasticNetCV(l1_ratio=l1_ratio, cv=3, n_jobs=-1, verbose=1)
         regr.fit(Xtr, ytr)
         return regr
 
@@ -111,6 +111,7 @@ class ElasticReg:
             # write results
             for key, value in self.dict_res.items():
                 writer.writerow([key, value])
+            writer.writerow(["mean_auc_val", round(np.mean(self.dict_res["auc_val"]), 3)])
 
         print(f"results saved in {directory}")
 
