@@ -1,4 +1,4 @@
-"""Computes and save blended (average) predictions from multiple models.
+"""Computes and save blended (average, median or extreme) predictions from multiple models.
 """
 import os
 import sys
@@ -62,18 +62,18 @@ def get_model_predictions(X, type_model: str, config: str, name_data_train:str):
 
 
 def get_blend_predictions(X, type_models:list, configs:list, name_data:str, type_blend:str):
-    """Computes blended (average) predictions.
+    """Computes blended predictions.
     
     Args:
-        X ([type]): [description]
-        type_models (list): [description]
-        configs (list): [description]
-        name_data (str): [description]
+        X (np.array): feature matrix.
+        type_models (list): list of type of models.
+        configs (list): list of type of configs.
+        name_data (str): name of data to predict from.
+        type_blend (str): type of blending?
     
     Returns:
-        [type]: [description]
+        np.array: predictions.
     """
-
     name_data_train= name_data.replace("test", "train")
     preds = []
     for type_model, config in zip(type_models, configs):
@@ -83,6 +83,9 @@ def get_blend_predictions(X, type_models:list, configs:list, name_data:str, type
     if type_blend == "mean":
         preds = np.mean(preds, 0)
         print("average of predictions computed")
+    elif type_blend == "median":
+        preds = np.median(preds, 0)
+        print("Median of predictions computed")
     elif type_blend == "extreme":
         preds_dist_from_half = np.abs(preds - 0.5)
         ind_max_dist_from_half = np.argmax(preds_dist_from_half, 0)
@@ -96,7 +99,15 @@ def get_blend_predictions(X, type_models:list, configs:list, name_data:str, type
 
 
 def save_blend_preds(preds, type_models: list, configs: list, name_data: str):
+    """Save blended predictions.
     
+    Args:
+        preds (np.array): blended predictions.
+        type_models (list): list of type of models.
+        configs (list): list of configs.
+        name_data (str): name of data to predict.
+    """
+
     preds_dir = os.path.join(PATH_SCRIPT, "preds", name_data)
     os.makedirs(preds_dir, exist_ok=True)
 
@@ -122,8 +133,8 @@ def save_blend_preds(preds, type_models: list, configs: list, name_data: str):
 def main():
     # parse config
     parser = argparse.ArgumentParser()
+    parser.add_argument("--type_blend", type=str, choices=["mean", "median", "extreme"], help="how to blend predictions")
     # must be in ["Xgboost", "Lgbm", "ElasticNet", "Catboost"]
-    parser.add_argument("--type_blend", type=str, choices=["mean", "extreme"], help="how to blend predictions")
     parser.add_argument("--type_models", type=str, default = "Xgboost Catboost Lgbm ElasticNet", help="models separated by a space.")
     parser.add_argument("--configs", type=str, default="test test test test", help="configs separated by a space, e.g. <31leaves 70leaves 31leaves lr3>")
     parser.add_argument("--filename", type=str, default="X_local.csv", help="name of data to predict")
