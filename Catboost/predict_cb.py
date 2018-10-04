@@ -56,8 +56,7 @@ def get_cb_predictions(X, models):
     # convert list to matrix
     preds = np.array(preds)
     preds = np.mean(preds, axis=0)
-    preds = np.expand_dims(preds, 1)
-    assert preds.shape == (len(X), 1), preds.shape
+    assert preds.shape == (len(X), ), preds.shape
     print("average of predictions computed")
     return preds
 
