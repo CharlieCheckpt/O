@@ -25,7 +25,18 @@ from utils import load_data
 PATH_SCRIPT = os.path.dirname(os.path.realpath(__file__))
 
 def get_model_predictions(X, type_model: str, config: str, name_data_train:str):
+    """Get predictions per model type.
     
+    Args:
+        X (np.array): feature matrix.
+        type_model (str): type of model.
+        config (str): config used for training.
+        name_data_train (str): name of data used for training.
+    
+    Returns:
+        np.array: predictions.
+    """
+
     if type_model == "Xgboost":
         models = load_xgb_models(config, name_data_train)
         preds = get_xgb_predictions(X, models)
@@ -50,15 +61,36 @@ def get_model_predictions(X, type_model: str, config: str, name_data_train:str):
 
 
 
-def get_blend_predictions(X, type_models:list, configs:list, name_data:str):
+def get_blend_predictions(X, type_models:list, configs:list, name_data:str, type_blend:str):
+    """Computes blended (average) predictions.
+    
+    Args:
+        X ([type]): [description]
+        type_models (list): [description]
+        configs (list): [description]
+        name_data (str): [description]
+    
+    Returns:
+        [type]: [description]
+    """
+
     name_data_train= name_data.replace("test", "train")
     preds = []
     for type_model, config in zip(type_models, configs):
         preds.append(get_model_predictions(X, type_model, config, name_data_train))
     # convert list to matrix
     preds = np.array(preds)
-    preds = np.mean(preds, 0)
-    print("average of predictions computed")
+    if type_blend == "mean":
+        preds = np.mean(preds, 0)
+        print("average of predictions computed")
+    elif type_blend == "extreme":
+        preds_dist_from_half = np.abs(preds - 0.5)
+        ind_max_dist_from_half = np.argmax(preds_dist_from_half, 0)
+        extreme_preds = np.zeros_like(preds)
+        for i, ind in enumerate(ind_max_dist_from_half):
+            extreme_preds[ind, i] = preds[ind, i]
+        preds = extreme_preds
+        print("extreme preds computed")
     return preds
 
 
@@ -91,6 +123,7 @@ def main():
     # parse config
     parser = argparse.ArgumentParser()
     # must be in ["Xgboost", "Lgbm", "ElasticNet", "Catboost"]
+    parser.add_argument("--type_blend", type=str, choices=["mean", "extreme"], help="how to blend predictions")
     parser.add_argument("--type_models", type=str, default = "Xgboost Catboost Lgbm ElasticNet", help="models separated by a space.")
     parser.add_argument("--configs", type=str, default="test test test test", help="configs separated by a space, e.g. <31leaves 70leaves 31leaves lr3>")
     parser.add_argument("--filename", type=str, default="X_local.csv", help="name of data to predict")
@@ -103,7 +136,7 @@ def main():
     name_data = args.filename.split(".")[0]
     X, _ = load_data(args.filename, None)
     # get average predictions from all models/configs
-    blend_preds = get_blend_predictions(X, args.type_models, args.configs, name_data)
+    blend_preds = get_blend_predictions(X, args.type_models, args.configs, name_data, args.type_blend)
     # save blended predictions
     save_blend_preds(blend_preds, args.type_models, args.configs, name_data)
 
