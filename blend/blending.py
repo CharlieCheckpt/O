@@ -89,6 +89,7 @@ def get_blend_predictions(X, type_models:list, configs:list, name_data:str, type
     elif type_blend == "extreme":
         preds_dist_from_half = np.abs(preds - 0.5)
         ind_max_dist_from_half = np.argmax(preds_dist_from_half, 0)
+        ind_max_dist_from_half = ind_max_dist_from_half.squeeze()
         extreme_preds = np.zeros_like(preds)
         for i, ind in enumerate(ind_max_dist_from_half):
             extreme_preds[ind, i] = preds[ind, i]
@@ -98,7 +99,7 @@ def get_blend_predictions(X, type_models:list, configs:list, name_data:str, type
 
 
 
-def save_blend_preds(preds, type_models: list, configs: list, name_data: str):
+def save_blend_preds(preds, type_models: list, configs: list, name_data: str, type_blend:str):
     """Save blended predictions.
     
     Args:
@@ -106,9 +107,10 @@ def save_blend_preds(preds, type_models: list, configs: list, name_data: str):
         type_models (list): list of type of models.
         configs (list): list of configs.
         name_data (str): name of data to predict.
+        type_blend (str): type of blending.
     """
 
-    preds_dir = os.path.join(PATH_SCRIPT, "preds", name_data)
+    preds_dir = os.path.join(PATH_SCRIPT, "preds", name_data, type_blend)
     os.makedirs(preds_dir, exist_ok=True)
 
     # get unique filename
@@ -133,7 +135,7 @@ def save_blend_preds(preds, type_models: list, configs: list, name_data: str):
 def main():
     # parse config
     parser = argparse.ArgumentParser()
-    parser.add_argument("--type_blend", type=str, choices=["mean", "median", "extreme"], help="how to blend predictions")
+    parser.add_argument("--type_blend", type=str, default="mean", choices=["mean", "median", "extreme"], help="how to blend predictions")
     # must be in ["Xgboost", "Lgbm", "ElasticNet", "Catboost"]
     parser.add_argument("--type_models", type=str, default = "Xgboost Catboost Lgbm ElasticNet", help="models separated by a space.")
     parser.add_argument("--configs", type=str, default="test test test test", help="configs separated by a space, e.g. <31leaves 70leaves 31leaves lr3>")
@@ -149,7 +151,7 @@ def main():
     # get average predictions from all models/configs
     blend_preds = get_blend_predictions(X, args.type_models, args.configs, name_data, args.type_blend)
     # save blended predictions
-    save_blend_preds(blend_preds, args.type_models, args.configs, name_data)
+    save_blend_preds(blend_preds, args.type_models, args.configs, name_data, args.type_blend)
 
 
 if __name__ == '__main__':
