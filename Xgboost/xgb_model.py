@@ -15,13 +15,13 @@ class Xgboost:
     def __init__(self, X, y, config: str, params: dict, name_data=""):
         self.X = X
         self.y = y
-        self.models = []
+        self.models = []  # trained models
         self.predictions = []
-        self.labels = []
-        self.config = config
-        self.name_data = name_data
-        self.params = params
-        self.dict_res = {}
+        self.labels = []  
+        self.config = config  # name of config
+        self.name_data = name_data  # name of data
+        self.params = params  # parameters
+        self.dict_res = {}  # dictionary of results
 
     def train(self, dtr, ddev, nrounds: int, early_stop_rounds: int):
         """Trains booster with early stopping on a dev set.
