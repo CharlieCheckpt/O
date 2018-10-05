@@ -19,10 +19,10 @@ class Lgbm:
         self.models = []
         self.predictions = []
         self.labels = []
-        self.config = config
-        self.name_data = name_data
-        self.params = params
-        self.dict_res = {}
+        self.config = config  # name of config
+        self.name_data = name_data  # name of data
+        self.params = params  # parameters of booster
+        self.dict_res = {}  # dictionary of results
 
     def train(self, Xtr, ytr, Xdev, ydev, nrounds: int, early_stop_rounds: int):
         """Trains booster with early stopping on a dev set.
