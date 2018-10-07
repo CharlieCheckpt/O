@@ -3,6 +3,7 @@
 Run the cross-validation with 
 `python run_cb.py --config <name config>`.
 
+Results and parameters are saved as `O/Catboost/experiments/<name_data>/<name config>/results.yaml`.
 Models and predictions (on validation sets) will be saved under the directory `O/Catboost/experiments/<name config>/models` and
 `O/Catboost/experiments/<name config>/preds`.
 
