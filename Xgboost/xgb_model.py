@@ -4,6 +4,7 @@ import os
 import csv
 import numpy as np
 import time
+import yaml
 
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold, train_test_split
@@ -50,7 +51,7 @@ class Xgboost:
             early_stop_rounds (int): number of non-improving rounds before early stopping.
         """
         # useful for saving later
-        self.nrounds = nrounds
+        self.params["nrounds"] = nrounds
 
         dict_res = {}  #  dictionary of results
         dict_res["nepochs"] = []  # number of epochs before early stop
@@ -59,6 +60,7 @@ class Xgboost:
         dict_res["auc_val"] = []  #  auc on validation set
 
         skf = StratifiedKFold(nfolds, random_state=777)
+        start = time.time()
         for train_index, val_index in skf.split(self.X, self.y):
             Xtr, ytr = self.X[train_index], self.y[train_index]
             # creation of dev set for early stopping
@@ -79,6 +81,8 @@ class Xgboost:
                 ydev, preds_dev), roc_auc_score(yval, preds_val)
             auc_tr, auc_dev, auc_val = round(auc_tr, 3), round(
                 auc_dev, 3), round(auc_val, 3)
+            # convert from np.float to float to be yaml readable
+            auc_tr, auc_val, auc_dev = float(auc_tr), float(auc_val), float(auc_dev)  
 
             dict_res["auc_train"].append(auc_tr)
             dict_res["auc_val"].append(auc_val)
@@ -97,6 +101,12 @@ class Xgboost:
             self.labels.append(yval)
             self.models.append(booster)
 
+        end = time.time()
+        # For easier read later, let's write the mean auc on val in the dictionary
+        self.dict_res["mean_auc_val"] = float(
+            round(np.mean(dict_res["auc_val"]), 4))
+        self.dict_res["run_time"] = float(round(end-start, 3))
+
     def print_results(self):
         """Print results (auc) per fold.
         """
@@ -113,23 +123,16 @@ class Xgboost:
             print(f"- {auc_val} (dev: {auc_dev}, nep:{nep}) -")
 
     def save_results(self):
-        """Save results (auc, number of non zero coef) and parameters (l1 ratio) 
-        in a file "./experiments/results.csv".
+        """Save results (auc, number of non zero coef) and parameters 
+        in a file "./experiments/results.yaml".
         """
         # create name of directory where to save
         directory = os.path.join("./experiments", self.name_data, self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
-        with open(os.path.join(directory, 'results.csv'), 'w') as csv_file:
-            writer = csv.writer(csv_file)
-            # write parameters
-            for key, value in self.params.items():
-                writer.writerow([key, value])
-            writer.writerow(["nrounds", self.nrounds])
-            # write results
-            for key, value in self.dict_res.items():
-                writer.writerow([key, value])
-            writer.writerow(["mean_auc_val", round(
-                np.mean(self.dict_res["auc_val"]), 3)])
+        # dump parameters and results to same file "results.yaml"
+        with open(os.path.join(directory, "results.yaml"), "w") as outfile:
+            yaml.dump(self.params, outfile, default_flow_style=False)
+            yaml.dump(self.dict_res, outfile, default_flow_style=False)
 
         print(f"results saved in {directory}")
 

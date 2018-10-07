@@ -1,7 +1,7 @@
 """Catboost model for binary classification.
 """
 import os
-import csv
+import yaml
 import numpy as np
 import time
 
@@ -50,7 +50,7 @@ class Catboost:
         """Stratified cross-validation.
         """
         # useful for saving later
-        self.nrounds = nrounds
+        self.params["nrounds"] = nrounds
 
         dict_res = {}  #  dictionary of results
         dict_res["auc_train"] = []  #  auc on train set
@@ -72,15 +72,19 @@ class Catboost:
             # needs predict_proba() for CatBoost
             preds_tr, preds_dev, preds_val = booster.predict_proba(
                 Xtr)[:, 1], booster.predict_proba(Xdev)[:, 1], booster.predict_proba(Xval)[:, 1]
+            
             auc_tr, auc_dev, auc_val = roc_auc_score(ytr, preds_tr), roc_auc_score(
                 ydev, preds_dev), roc_auc_score(yval, preds_val)
             auc_tr, auc_dev, auc_val = round(auc_tr, 3), round(
                 auc_dev, 3), round(auc_val, 3)
+            # convert from np.float to float to be yaml readable
+            auc_tr, auc_val, auc_dev = float(
+                auc_tr), float(auc_val), float(auc_dev)
 
             dict_res["auc_train"].append(auc_tr)
             dict_res["auc_val"].append(auc_val)
             dict_res["auc_dev"].append(auc_dev)
-            dict_res["nepochs"].append(nepochs)
+            dict_res["nepochs"].append(len(history_eval["train"]["auc"]))
 
             avg_auc_train, avg_auc_val = round(
                 np.mean(dict_res["auc_train"]), 3), round(np.mean(dict_res["auc_val"]), 3)
@@ -89,12 +93,17 @@ class Catboost:
             print(
                 f"Average Auc on train : {avg_auc_train}, validation : {avg_auc_val}")
 
+            self.dict_res = dict_res
             self.predictions.append(preds_val)
             self.labels.append(yval)
             self.models.append(booster)
+        
         end = time.time()
-        dict_res["run_time"] = round(end-start, 3)
-        self.dict_res = dict_res
+        # For easier read later, let's write the mean auc on val in the dictionary
+        self.dict_res["mean_auc_val"] = float(
+            round(np.mean(dict_res["auc_val"]), 4))
+        self.dict_res["run_time"] = float(round(end-start, 3))
+
 
     def print_results(self):
         avg_auc_train, avg_auc_val = round(np.mean(self.dict_res["auc_train"]), 3), round(
@@ -108,21 +117,16 @@ class Catboost:
             print(f"- {auc_val} (dev: {auc_dev}, nep:{nep}) -")
 
     def save_results(self):
+        """Save results (auc, number of non zero coef) and parameters 
+        in a file "./experiments/results.yaml".
+        """
         # create name of directory where to save
         directory = os.path.join("./experiments", self.name_data, self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
-        with open(os.path.join(directory, 'results.csv'), 'w') as csv_file:
-            writer = csv.writer(csv_file)
-            # write parameters
-            for key, value in self.params.items():
-                writer.writerow([key, value])
-            writer.writerow(["nrounds", self.nrounds])
-            # write results
-            for key, value in self.dict_res.items():
-                writer.writerow([key, value])
-            writer.writerow(["mean_auc_val", round(
-                    np.mean(self.dict_res["auc_val"]), 3)])
-
+        # dump parameters and results to same file "results.yaml"
+        with open(os.path.join(directory, "results.yaml"), "w") as outfile:
+            yaml.dump(self.params, outfile, default_flow_style=False)
+            yaml.dump(self.dict_res, outfile, default_flow_style=False)
 
         print(f"results saved in {directory}")
 

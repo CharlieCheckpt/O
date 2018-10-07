@@ -2,7 +2,7 @@
 """
 
 import os
-import csv
+import yaml
 import numpy as np
 import time
 import pickle
@@ -65,12 +65,14 @@ class ElasticReg:
             auc_tr, auc_val = roc_auc_score(
                 ytr, preds_tr), roc_auc_score(yval, preds_val)
             auc_tr, auc_val = round(auc_tr, 3), round(auc_val, 3)
-            nnz_coef = np.sum(regr.coef_ != 0)
+            auc_tr, auc_val = float(auc_tr), float(auc_val)  # make it yaml readable
+            nnz_coef = int(np.sum(regr.coef_ != 0))  # make it yaml readable
+            chosen_alpha = float(regr.alpha_)  # make it yaml readable
 
             dict_res["auc_train"].append(auc_tr)
             dict_res["auc_val"].append(auc_val)
             dict_res['nnz_coef'].append(nnz_coef)
-            dict_res["alpha"].append(regr.alpha_)
+            dict_res["alpha"].append(chosen_alpha)
 
             avg_auc_train, avg_auc_val = round(
                 np.mean(dict_res["auc_train"]), 3), round(np.mean(dict_res["auc_val"]), 3)
@@ -78,13 +80,18 @@ class ElasticReg:
                 f"Auc on train : {auc_tr}, validation: {auc_val}, nnz coef : {nnz_coef}")
             print(
                 f"Average Auc on train : {avg_auc_train}, validation : {avg_auc_val}")
-
+            
+            self.dict_res = dict_res
             self.predictions.append(preds_val)
             self.labels.append(yval)
             self.models.append(regr)
+
         end = time.time()
-        dict_res["run_time"] = round(end-start, 3)
-        self.dict_res = dict_res
+        # For easier read later, let's write the mean auc on val in the dictionary
+        self.dict_res["mean_auc_val"] = float(
+            round(np.mean(dict_res["auc_val"]), 4))
+        self.dict_res["run_time"] = float(round(end-start, 3))
+
 
     def print_results(self):
         """Print results (auc, number of non zero coefficients) per fold.
@@ -97,24 +104,21 @@ class ElasticReg:
         for auc_val, nnz_coef in zip(self.dict_res["auc_val"], self.dict_res["nnz_coef"]):
             print(f"- {auc_val} (nnz coef:{nnz_coef}) -")
 
-    def save_results(self):
-        """Save results (auc, number of non zero coef) and parameters (l1 ratio) 
-        in a file "./experiments/results.csv".
-        """
 
+    def save_results(self):
+        """Save results (auc, number of non zero coef) and parameters 
+        in a file "./experiments/results.yaml".
+        """
         # create name of directory where to save
         directory = os.path.join("./experiments", self.name_data, self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
-        with open(os.path.join(directory, 'results.csv'), 'w') as csv_file:
-            writer = csv.writer(csv_file)
-            # write parameter
-            writer.writerow(["l1_ratio", self.l1_ratio])
-            # write results
-            for key, value in self.dict_res.items():
-                writer.writerow([key, value])
-            writer.writerow(["mean_auc_val", round(np.mean(self.dict_res["auc_val"]), 3)])
+        # dump parameters and results to same file "results.yaml"
+        with open(os.path.join(directory, "results.yaml"), "w") as outfile:
+            yaml.dump({"l1_ratio":self.l1_ratio}, outfile, default_flow_style=False)
+            yaml.dump(self.dict_res, outfile, default_flow_style=False)
 
         print(f"results saved in {directory}")
+
 
     def save_preds(self):
         """Save validation predictions and labels on folder "./experiments/"

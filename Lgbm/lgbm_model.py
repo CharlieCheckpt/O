@@ -2,7 +2,7 @@
 """
 
 import os
-import csv
+import yaml
 import numpy as np
 import time
 
@@ -54,9 +54,8 @@ class Lgbm:
             nfolds (int): number of folds.
             early_stop_rounds (int): number of non-improving rounds before early stopping.
         """
-
         # useful for saving later
-        self.nrounds = nrounds
+        self.params["nrounds"] = nrounds
 
         dict_res = {}  #  dictionary of results
         dict_res["nepochs"] = []  # number of epochs before early stop
@@ -81,6 +80,10 @@ class Lgbm:
                 ydev, preds_dev), roc_auc_score(yval, preds_val)
             auc_tr, auc_dev, auc_val = round(auc_tr, 3), round(
                 auc_dev, 3), round(auc_val, 3)
+            # convert from np.float to float to be yaml readable
+            auc_tr, auc_val, auc_dev = float(
+                auc_tr), float(auc_val), float(auc_dev)
+
 
             dict_res["auc_train"].append(auc_tr)
             dict_res["auc_val"].append(auc_val)
@@ -94,12 +97,16 @@ class Lgbm:
             print(
                 f"Average Auc on train : {avg_auc_train}, validation : {avg_auc_val}")
 
+            self.dict_res = dict_res
             self.predictions.append(preds_val)
             self.labels.append(yval)
             self.models.append(booster)
+        
         end = time.time()
-        dict_res["run_time"] = round(end-start, 3)
-        self.dict_res = dict_res
+        # For easier read later, let's write the mean auc on val in the dictionary
+        self.dict_res["mean_auc_val"] = float(
+            round(np.mean(dict_res["auc_val"]), 4))
+        self.dict_res["run_time"] = float(round(end-start, 3))
 
     def print_results(self):
         """Print results (auc) per fold.
@@ -115,24 +122,19 @@ class Lgbm:
             print(f"- {auc_val} (dev: {auc_dev}, nep:{nep}) -")
 
     def save_results(self):
-        """Save results (auc, number of non zero coef) and parameters (l1 ratio) 
-        in a file "./experiments/results.csv".
+        """Save results (auc, number of non zero coef) and parameters 
+        in a file "./experiments/results.yaml".
         """
         # create name of directory where to save
         directory = os.path.join("./experiments", self.name_data, self.config)
         os.makedirs(directory, exist_ok=True)  # overwrite
-        with open(os.path.join(directory, 'results.csv'), 'w') as csv_file:
-            writer = csv.writer(csv_file)
-            # write parameters
-            for key, value in self.params.items():
-                writer.writerow([key, value])
-            writer.writerow(["nrounds", self.nrounds])
-            # write results
-            for key, value in self.dict_res.items():
-                writer.writerow([key, value])
-            writer.writerow(["mean_auc_val", round(np.mean(self.dict_res["auc_val"]), 3)])
+        # dump parameters and results to same file "results.yaml"
+        with open(os.path.join(directory, "results.yaml"), "w") as outfile:
+            yaml.dump(self.params, outfile, default_flow_style=False)
+            yaml.dump(self.dict_res, outfile, default_flow_style=False)
 
         print(f"results saved in {directory}")
+
 
     def save_preds(self):
         """Save validation predictions and labels on folder "./experiments/"
