@@ -5,7 +5,7 @@ import yaml
 import sys
 sys.path.insert(0, "../")
 from utils import load_data
-from lgbm_model import Lgbm
+from lgb_model import Lgbm
 
 
 def main():
