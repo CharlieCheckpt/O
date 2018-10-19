@@ -1,25 +1,25 @@
 """Computes and save blended (average, median or extreme) predictions from multiple models.
 """
+import argparse
+import csv
+import glob
 import os
 import sys
-import glob
-import argparse
+import uuid
+
 import numpy as np
 import pandas as pd
-import uuid
-import csv
 
 # Import functions corresponding to each type of models
-sys.path.insert(0, "../Xgboost/")
-from predict_xgb import load_xgb_models, get_xgb_predictions
-sys.path.insert(0, "../Lgbm/")
-from predict_lgbm import load_lgb_models, get_lgb_predictions
-sys.path.insert(0, "../Catboost/")
-from predict_cb import load_cb_models, get_cb_predictions
-sys.path.insert(0, "../ElasticNet/")
-from predict_en import load_en_models, get_en_predictions
 sys.path.insert(0, "../")
+
+from Catboost.predict_cb import get_cb_predictions, load_cb_models
+from ElasticNet.predict_en import get_en_predictions, load_en_models
+from Lgbm.predict_lgb import get_lgb_predictions, load_lgb_models
+from Xgboost.predict_xgb import get_xgb_predictions, load_xgb_models
 from utils import load_data
+
+
 
 # know where the script is from inside the script
 PATH_SCRIPT = os.path.dirname(os.path.realpath(__file__))
