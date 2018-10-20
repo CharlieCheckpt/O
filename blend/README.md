@@ -3,7 +3,9 @@ Once we have several type of models trained, one may want to blend predictions o
 
 
 You can run the blending script like this : 
-`python blending.py --type_blend <type blend> --type_models <type models> --configs <configs> --filename <filename>`
+```console
+python blending.py --type_blend <type blend> --type_models <type models> --configs <configs> --filename <filename>
+```
 
 * `<type blend>` : type of blending. e.g. *"mean"*.
 * `<type models>` : type of models. e.g. *"Xgboost Xgboost Catboost ElasticNet"*
