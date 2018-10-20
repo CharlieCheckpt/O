@@ -1,4 +1,4 @@
-# Blending
+# Blending
 Once we have several type of models trained, one may want to blend predictions of these different models in order to improve prediction power. The most obvious type of blending is to compute the average of the model predictions.
 
 
