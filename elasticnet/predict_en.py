@@ -1,17 +1,12 @@
 """Predict from data given by user with models trained with config.
 """
-import sys
-import argparse
 import os
 import glob
 import yaml
 import pickle
-
 import numpy as np
 import pandas as pd
-
-sys.path.insert(0, "../")
-from utils import load_data
+from O.utils import load_data
 
 # know where the script is from inside the script
 PATH_SCRIPT = os.path.dirname(os.path.realpath(__file__))
@@ -75,7 +70,26 @@ def save_predictions(predictions, config: str, name_data: str):
     print(f"predictions saved in {path2preds} as {fn_preds}")
 
 
-def main():
+def main(name_config:str, filename_X:str):
+    
+    name_data = filename_X.split(".")[0]  #  name of data (without extension)
+    print(f"\n ----> You chose to predict with config : {name_config} <---- \n")
+    print(f"\n ----> You chose to predict data : {filename_X} <---- \n")
+
+    # load data
+    X, _ = load_data(filename_X=filename_X, filename_y=None)
+    # Load trained models
+    # models are trained on name_data_train
+    name_data_train = name_data.replace("test", "train")
+    models = load_en_models(name_config, name_data_train)
+    # get predictions
+    preds = get_en_predictions(X, models)
+    # save predictions
+    save_predictions(preds, name_config, name_data)
+
+
+if __name__ == '__main__':
+    import argparse
     # parse config
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="test",
@@ -83,22 +97,4 @@ def main():
     parser.add_argument("--fn_X", default="X_local.csv",
                         type=str, help="data to use for predicting.")
     args = parser.parse_args()
-    config = args.config  # name of config
-    name_data = args.fn_X.split(".")[0]  #  name of data (without extension)
-    print(f"\n ----> You chose to predict with config : {config} <---- \n")
-    print(f"\n ----> You chose to predict data : {args.fn_X} <---- \n")
-
-    # load data
-    X, _ = load_data(filename_X=args.fn_X, filename_y=None)
-    # Load trained models
-    # models are trained on name_data_train
-    name_data_train = name_data.replace("test", "train")
-    models = load_en_models(config, name_data_train)
-    # get predictions
-    preds = get_en_predictions(X, models)
-    # save predictions
-    save_predictions(preds, config, name_data)
-
-
-if __name__ == '__main__':
-    main()
+    main(args.config, args.fn_X)
