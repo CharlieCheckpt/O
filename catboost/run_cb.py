@@ -1,3 +1,4 @@
+"""Run catboost model with specified config"""
 import os
 import argparse
 import yaml
@@ -6,7 +7,7 @@ from cb_model import Catboost
 
 
 def main(name_config:str):
-    print(f"\n ----> You chose config : {config} <---- \n")
+    print(f"\n ----> You chose config : {name_config} <---- \n")
     # load config
     configs = yaml.load(open("configs.yaml"))
     opts = configs[name_config]  #  dict of all options
