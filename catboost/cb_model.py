@@ -23,7 +23,7 @@ class Catboost:
         self.params = params  # parameters
         self.dict_res = {}  # dictionary of results
 
-    def train(self, Xtr, ytr, Xdev, ydev, nrounds: int, early_stop_rounds: int):
+    def train(self, Xtr, ytr, Xdev, ydev, nrounds:int, early_stop_rounds:int):
         """Trains booster.
         Returns:
             model
@@ -84,7 +84,7 @@ class Catboost:
             dict_res["auc_train"].append(auc_tr)
             dict_res["auc_val"].append(auc_val)
             dict_res["auc_dev"].append(auc_dev)
-            dict_res["nepochs"].append(len(history_eval["train"]["auc"]))
+            dict_res["nepochs"].append(nepochs)
 
             avg_auc_train, avg_auc_val = round(
                 np.mean(dict_res["auc_train"]), 3), round(np.mean(dict_res["auc_val"]), 3)
