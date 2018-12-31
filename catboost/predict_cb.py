@@ -11,8 +11,7 @@ import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier
 
-sys.path.insert(0, "../")
-from utils import load_data
+from O.utils import load_data
 
 # know where the script is from inside the script
 PATH_SCRIPT = os.path.dirname(os.path.realpath(__file__))
