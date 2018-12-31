@@ -79,30 +79,29 @@ def save_predictions(predictions, config: str, name_data: str):
     print(f"predictions saved in {path2preds} as {fn_preds}")
 
 
-def main():
-    # parse config
+def main(name_config:str, filename_data: str):
+   
+    filename_data_no_ext = filename_data.split(".")[0]  #  name of data (without extension)
+    print(f"\n ----> You chose to predict with config : {name_config} <---- \n")
+    print(f"\n ----> You chose to predict data : {filename_data} <---- \n")
+    # load data
+    X, _ = load_data(filename_X=filename_data, filename_y=None)
+    # Load trained models
+    # models are trained on name_data_train
+    name_data_train = filename_data_no_ext.replace("test", "train")
+    models = load_cb_models(name_config, name_data_train)
+    # get predictions
+    preds = get_cb_predictions(X, models)
+    # save predictions
+    save_predictions(preds, name_config, filename_data_no_ext)
+
+
+if __name__ == '__main__':
+     # parse config
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="test",
                         type=str, help="config for predicting.")
     parser.add_argument("--fn_data", default="X_local.csv",
                         type=str, help="data to use for predicting.")
     args = parser.parse_args()
-    config = args.config  # name of config
-    name_data = args.fn_data.split(".")[0]  #  name of data (without extension)
-    print(f"\n ----> You chose to predict with config : {config} <---- \n")
-    print(f"\n ----> You chose to predict data : {args.fn_data} <---- \n")
-
-    # load data
-    X, _ = load_data(filename_X=args.fn_data, filename_y=None)
-    # Load trained models
-    # models are trained on name_data_train
-    name_data_train = name_data.replace("test", "train")
-    models = load_cb_models(config, name_data_train)
-    # get predictions
-    preds = get_cb_predictions(X, models)
-    # save predictions
-    save_predictions(preds, config, name_data)
-
-
-if __name__ == '__main__':
-    main()
+    main(args.config, args.fn_data)
