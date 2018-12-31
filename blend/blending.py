@@ -1,6 +1,5 @@
 """Computes and save blended (average, median or extreme) predictions from multiple models.
 """
-import argparse
 import csv
 import glob
 import os
@@ -11,12 +10,10 @@ import numpy as np
 import pandas as pd
 
 # Import functions corresponding to each type of models
-sys.path.insert(0, "../")
-
-from Catboost.predict_cb import get_cb_predictions, load_cb_models
-from ElasticNet.predict_en import get_en_predictions, load_en_models
-from Lgbm.predict_lgb import get_lgb_predictions, load_lgb_models
-from Xgboost.predict_xgb import get_xgb_predictions, load_xgb_models
+from O.catboost.predict_cb import get_cb_predictions, load_cb_models
+from O.elasticnet.predict_en import get_en_predictions, load_en_models
+from O.lgbm.predict_lgb import get_lgb_predictions, load_lgb_models
+from O.xgboost.predict_xgb import get_xgb_predictions, load_xgb_models
 from utils import load_data
 
 
@@ -132,27 +129,30 @@ def save_blend_preds(preds, type_models: list, configs: list, name_data: str, ty
     print(f"Blended predictions info saved in {fn_info_preds}")
 
 
-def main():
+def main(type_blend:str, type_models:list, configs: list, filename:str):
+    name_data = filename.split(".")[0]
+    X, _ = load_data(filename, None)
+    # get average predictions from all models/configs
+    blend_preds = get_blend_predictions(X, type_models, configs, name_data, type_blend)
+    # save blended predictions
+    save_blend_preds(blend_preds, type_models, configs, name_data, type_blend)
+
+
+if __name__ == '__main__':
+    import argparse
     # parse config
     parser = argparse.ArgumentParser()
-    parser.add_argument("--type_blend", type=str, default="mean", choices=["mean", "median", "extreme"], help="how to blend predictions")
+    parser.add_argument("--type_blend", type=str, default="mean",
+                        choices=["mean", "median", "extreme"], help="how to blend predictions")
     # must be in ["Xgboost", "Lgbm", "ElasticNet", "Catboost"]
-    parser.add_argument("--type_models", type=str, default = "Xgboost Catboost Lgbm ElasticNet", help="models separated by a space.")
-    parser.add_argument("--configs", type=str, default="test test test test", help="configs separated by a space, e.g. <31leaves 70leaves 31leaves lr3>")
-    parser.add_argument("--filename", type=str, default="X_local.csv", help="name of data to predict")
-    
+    parser.add_argument("--type_models", type=str,
+                        default="Xgboost Catboost Lgbm ElasticNet", help="models separated by a space.")
+    parser.add_argument("--configs", type=str, default="test test test test",
+                        help="configs separated by a space, e.g. <31leaves 70leaves 31leaves lr3>")
+    parser.add_argument("--filename", type=str,
+                        default="X_local.csv", help="name of data to predict")
     args = parser.parse_args()
     # convert string to list of strings
     args.type_models = args.type_models.split(' ')
     args.configs = args.configs.split(' ')
-
-    name_data = args.filename.split(".")[0]
-    X, _ = load_data(args.filename, None)
-    # get average predictions from all models/configs
-    blend_preds = get_blend_predictions(X, args.type_models, args.configs, name_data, args.type_blend)
-    # save blended predictions
-    save_blend_preds(blend_preds, args.type_models, args.configs, name_data, args.type_blend)
-
-
-if __name__ == '__main__':
-    main()
+    main(args.type_blend, args.type_models, args.configs, args.filename)
