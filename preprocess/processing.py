@@ -3,17 +3,13 @@ Loads .csv original train and test files (it's slow) and saves it as .npy.
 Also collapses SNP pairs for Xtrain and Xtest and save the new dataset as .npy,
 which has 18k columns instead of 36k).
 """
-import sys
 import time
-import os
-
+from pathlib import Path
 import numpy as np
 import pandas as pd
+from O.utils import DATA_PATH
 
-sys.path.insert(0, "../")
-from utils import DATA_PATH
-
-def load_data(fn_X:str, fn_y=None):
+def load_data(fn_X:Path, fn_y=None):
     """load data (X and potentially y)
     
     Args:
@@ -62,7 +58,7 @@ def collapse_snip_pairs(X):
     return half_X
 
 
-def save_data(X, y, filename_X:str, filename_y:str):
+def save_data(X, y, filename_X:Path, filename_y:Path):
     """save X and y.
     
     Args:
@@ -81,9 +77,9 @@ def save_data(X, y, filename_X:str, filename_y:str):
 
 def main():
     # load data
-    filename_Xtr = os.path.join(DATA_PATH, 'Xtrain_challenge_owkin.csv')
-    filename_ytr = os.path.join(DATA_PATH, 'Ytrain_challenge_owkin.csv')
-    filename_Xte = os.path.join(DATA_PATH, 'Xtest_challenge_owkin.csv')
+    filename_Xtr = DATA_PATH / 'Xtrain_challenge_owkin.csv'
+    filename_ytr = DATA_PATH / 'Ytrain_challenge_owkin.csv'
+    filename_Xte = DATA_PATH / 'Xtest_challenge_owkin.csv'
 
     Xtr, ytr = load_data(filename_Xtr, filename_ytr)
     Xte = load_data(filename_Xte)
@@ -93,17 +89,16 @@ def main():
     Xte_half = collapse_snip_pairs(Xte)
 
     # save_data
-    filename_Xtr = filename_Xtr.replace(".csv", ".npy")
-    filename_Xtr_half = filename_Xtr.replace("Xtrain", "Xtrain_half")
+    new_filename_Xtr = Path(str(filename_Xtr).replace(".csv", ".npy"))
+    filename_Xtr_half = Path(str(new_filename_Xtr).replace("Xtrain", "Xtrain_half"))
+    new_filename_ytr = Path(str(filename_ytr).replace(".csv", ".npy"))
+    new_filename_Xte = Path(str(filename_Xte).replace(".csv", ".npy"))
+    filename_Xte_half = Path(str(new_filename_Xte).replace("Xtest", "Xtest_half"))
 
-    filename_ytr = filename_ytr.replace(".csv", ".npy")
-    filename_Xte = filename_Xte.replace(".csv", ".npy")
-    filename_Xte_half = filename_Xte.replace("Xtest", "Xtest_half")
-
-    save_data(Xtr, ytr, filename_Xtr, filename_ytr)
+    save_data(Xtr, ytr, new_filename_Xtr, new_filename_ytr)
     save_data(Xtr_half, None, filename_Xtr_half, None)
 
-    save_data(Xte, None, filename_Xte, None)
+    save_data(Xte, None, new_filename_Xte, None)
     save_data(Xte_half, None, filename_Xte_half, None)
 
 

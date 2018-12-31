@@ -1,3 +1,4 @@
+from pathlib import Path
 import time
 import numpy as np
 import pandas as pd
@@ -5,7 +6,7 @@ import os
 import pickle
 
 # DATA_PATH = '/home/ubuntu/workspace/O/data'
-DATA_PATH = '/home/checkpt/workspace/O/data'
+DATA_PATH = Path('/home/checkpt/workspace/O/data')
 
 
 def load_data(filename_X:str, filename_y:str):
@@ -21,16 +22,16 @@ def load_data(filename_X:str, filename_y:str):
 
     start = time.time()
     if ".npy" in filename_X:
-        X = np.load(os.path.join(DATA_PATH, filename_X))
+        X = np.load(DATA_PATH / filename_X)
         if filename_y is not None:
-            y = np.load(os.path.join(DATA_PATH, filename_y))
+            y = np.load(DATA_PATH / filename_y)
             y = y.squeeze()  # avoid bugs
         else:
             y = None
     elif ".csv" in filename_X:
-        X = pd.read_csv(os.path.join(DATA_PATH, filename_X), index_col=0).values
+        X = pd.read_csv(DATA_PATH / filename_X, index_col=0).values
         if filename_y is not None:
-            y = pd.read_csv(os.path.join(DATA_PATH, filename_y), index_col=0).values
+            y = pd.read_csv(DATA_PATH / filename_y, index_col=0).values
             y = y.squeeze()  # avoid bugs
         else:
             y = None
